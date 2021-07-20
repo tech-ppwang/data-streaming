@@ -258,6 +258,10 @@ public class TestResultService {
         // 发送成功通知
         LoadTestReportWithBLOBs loadTestReport = loadTestReportMapper.selectByPrimaryKey(reportId);
         loadTestProducer.sendMessage(loadTestReport);
+        // 清理中间文件
+        LoadTestReportDetailExample example2 = new LoadTestReportDetailExample();
+        example2.createCriteria().andReportIdEqualTo(report.getId());
+        loadTestReportDetailMapper.deleteByExample(example2);
     }
 
     public void generateReport(String reportId, boolean isForce) {
