@@ -89,14 +89,10 @@ public class TestResultService {
         extLoadTestReportMapper.updateStatus(reportId, TestStatus.Running.name(), TestStatus.Starting.name());
         extLoadTestMapper.updateStatus(testId, TestStatus.Running.name(), TestStatus.Starting.name());
 
-        LoadTestReportDetailExample example = new LoadTestReportDetailExample();
-        example.createCriteria().andReportIdEqualTo(reportId);
-        long part = loadTestReportDetailMapper.countByExample(example);
         LoadTestReportDetail record = new LoadTestReportDetail();
         record.setReportId(reportId);
-        record.setPart(part + 1);
         record.setContent(content);
-        loadTestReportDetailMapper.insert(record);
+        extLoadTestReportMapper.insert(record);
 
         // 计算结果
         Future<?> submit = completeThreadPool.submit(() -> generateReport(reportId));
