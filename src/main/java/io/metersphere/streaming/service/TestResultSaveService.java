@@ -22,7 +22,7 @@ public class TestResultSaveService {
         }
     }
 
-    public boolean isReporting(String reportId) {
+    public boolean isReportingSet(String reportId) {
         int i = extLoadTestReportResultMapper.updateReportStatus(reportId, ReportKeys.ResultStatus.name(), "Ready", "Reporting");
         return i != 0;
     }

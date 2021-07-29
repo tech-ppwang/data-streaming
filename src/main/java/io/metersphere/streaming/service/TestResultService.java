@@ -21,7 +21,6 @@ import io.metersphere.streaming.engine.producer.LoadTestProducer;
 import io.metersphere.streaming.model.AdvancedConfig;
 import io.metersphere.streaming.model.Metric;
 import io.metersphere.streaming.model.PressureConfig;
-import io.metersphere.streaming.model.ReportTask;
 import io.metersphere.streaming.report.ReportGeneratorFactory;
 import io.metersphere.streaming.report.base.ReportTimeInfo;
 import io.metersphere.streaming.report.base.TestOverview;
@@ -46,7 +45,6 @@ import java.io.PrintWriter;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
 
 @Service
 public class TestResultService {
@@ -72,7 +70,6 @@ public class TestResultService {
     private ObjectMapper objectMapper;
     @Resource
     private LoadTestReportResultMapper loadTestReportResultMapper;
-    private final CopyOnWriteArrayList<ReportTask> runningReports = new CopyOnWriteArrayList<>();
 
     public static final String TEMP_DIRECTORY_PATH = FileUtils.getTempDirectoryPath();
 
@@ -95,8 +92,7 @@ public class TestResultService {
         extLoadTestReportMapper.insert(record);
 
         // 计算结果
-        Future<?> submit = completeThreadPool.submit(() -> generateReport(reportId));
-        runningReports.add(new ReportTask(reportId, submit));
+        preGenerateReport(reportId);
     }
 
     public String convertToLine(Metric metric) {
@@ -215,33 +211,34 @@ public class TestResultService {
         }
     }
 
-    public void generateReport(String reportId) {
+    public void preGenerateReport(String reportId) {
         // 检查 report_status
-        boolean reporting = testResultSaveService.isReporting(reportId);
-
-        generateReport(reportId, reporting);
+        boolean set = testResultSaveService.isReportingSet(reportId);
+        if (!set) {
+            LogUtil.info("report generator is running.");
+            return;
+        }
+        completeThreadPool.submit(() -> generateReport(reportId));
     }
 
     private void generateReportComplete(String reportId) {
         LoadTestReportWithBLOBs report = new LoadTestReportWithBLOBs();
         report.setId(reportId);
         report.setUpdateTime(System.currentTimeMillis());
-        // 取消正在计算的任务
-        try {
-            List<ReportTask> collect = runningReports.stream()
-                    .filter(reportTask -> StringUtils.equals(reportId, reportTask.getReportId()))
-                    .collect(Collectors.toList());
-
-            runningReports.removeAll(collect);
-            collect.forEach(reportTask -> reportTask.getTask().cancel(true));
-        } catch (Exception e) {
-            LogUtil.error("取消计算任务出错: ", e);
-        }
         // 测试结束后执行计算报告
         report.setStatus(TestStatus.Reporting.name());
         loadTestReportMapper.updateByPrimaryKeySelective(report);
+        // 检查 状态
+        while (!testResultSaveService.isReportingSet(reportId)) {
+            try {
+                Thread.sleep(20_000);
+            } catch (InterruptedException e) {
+                LogUtil.error(e);
+            }
+        }
+
         // 强制执行一次生成报告
-        generateReport(reportId, true);
+        generateReport(reportId);
         // 保存jtl
         saveJtlFile(reportId);
         // 标记结束
@@ -260,11 +257,8 @@ public class TestResultService {
         loadTestReportDetailMapper.deleteByExample(example2);
     }
 
-    public void generateReport(String reportId, boolean isForce) {
-        if (!isForce) {
-            LogUtil.info("report generator is running.");
-            return;
-        }
+    public void generateReport(String reportId) {
+
         LoadTestReportDetailExample example = new LoadTestReportDetailExample();
         example.createCriteria().andReportIdEqualTo(reportId);
         // 防止中间文件删除之后又执行生成报告导致报错的问题
