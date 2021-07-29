@@ -24,10 +24,9 @@ public interface ExtLoadTestReportMapper {
     @Options(fetchSize = Integer.MIN_VALUE, resultSetType = ResultSetType.FORWARD_ONLY)
     List<LoadTestReportDetail> fetchTestReportDetails(@Param("reportId") String reportId);
 
-    @Insert({"INSERT INTO load_test_report_detail(report_id, part, content) " +
+    @Insert({"INSERT INTO load_test_report_detail(report_id, content) " +
             "VALUES( ",
             "#{report.reportId}, ",
-            "(SELECT COUNT(*) FROM load_test_report_detail AS tmp WHERE report_id = #{report.reportId}) + 1, ",
             "#{report.content}) "})
     void insert(@Param("report") LoadTestReportDetail record);
 }
