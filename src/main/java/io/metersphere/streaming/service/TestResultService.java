@@ -160,6 +160,27 @@ public class TestResultService {
         completeThreadPool.schedule(() -> generateReportComplete(report.getId()), 30, TimeUnit.SECONDS);
     }
 
+    public void completeReport(String reportId) {
+        LoadTestReportWithBLOBs report = loadTestReportMapper.selectByPrimaryKey(reportId);
+        if (report == null) {
+            LogUtil.info("Report is null.");
+            return;
+        }
+
+        // 测试结束后保存状态
+        report.setUpdateTime(System.currentTimeMillis());
+        report.setStatus(TestStatus.Completed.name());
+        loadTestReportMapper.updateByPrimaryKeySelective(report);
+
+        // 更新测试的状态
+        LoadTestWithBLOBs loadTest = new LoadTestWithBLOBs();
+        loadTest.setId(report.getTestId());
+        loadTest.setStatus(TestStatus.Completed.name());
+        loadTestMapper.updateByPrimaryKeySelective(loadTest);
+
+        LogUtil.info("test completed: " + report.getTestId());
+    }
+
     private void saveJtlFile(String reportId) {
         LoadTestReportDetailExample example1 = new LoadTestReportDetailExample();
         example1.createCriteria().andReportIdEqualTo(reportId);
