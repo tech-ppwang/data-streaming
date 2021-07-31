@@ -1,6 +1,7 @@
 package io.metersphere.streaming.base.mapper.ext;
 
 import io.metersphere.streaming.base.domain.LoadTestReportDetail;
+import io.metersphere.streaming.base.domain.LoadTestReportResultPart;
 import org.apache.ibatis.annotations.*;
 import org.apache.ibatis.mapping.ResultSetType;
 import org.springframework.stereotype.Repository;
@@ -29,4 +30,12 @@ public interface ExtLoadTestReportMapper {
             "#{report.reportId}, ",
             "#{report.content}) "})
     void insert(@Param("report") LoadTestReportDetail record);
+
+    @Select(value = {
+            "SELECT report_id AS reportId, report_key AS reportKey, resource_index AS resourceIndex, report_value AS reportValue ",
+            "FROM load_test_report_result_part ",
+            "WHERE report_id = #{reportId} AND report_key = #{reportKey} "
+    })
+    @Options(fetchSize = Integer.MIN_VALUE, resultSetType = ResultSetType.FORWARD_ONLY)
+    List<LoadTestReportResultPart> fetchTestReportParts(@Param("reportId") String reportId, @Param("reportKey") String reportKey);
 }

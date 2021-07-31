@@ -8,7 +8,7 @@ import lombok.Data;
 public class ReportResult {
     private String reportId;
     private String reportKey;
-    private String resourceIndex;
+    private Integer resourceIndex;
     private Boolean completed;
     private Object content;
 }

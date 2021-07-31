@@ -1,7 +1,8 @@
 package io.metersphere.streaming.engine.consumer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.metersphere.streaming.base.domain.LoadTestReportResult;
+import io.metersphere.streaming.base.domain.LoadTestReportResultPart;
+import io.metersphere.streaming.commons.utils.LogUtil;
 import io.metersphere.streaming.model.ReportResult;
 import io.metersphere.streaming.service.TestResultSaveService;
 import io.metersphere.streaming.service.TestResultService;
@@ -11,7 +12,6 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.util.UUID;
 
 @Service
 public class ReportConsumer {
@@ -27,14 +27,20 @@ public class ReportConsumer {
     @KafkaListener(id = CONSUME_ID, topics = "${kafka.report.topic}", groupId = "${spring.kafka.consumer.group-id}")
     public void consume(ConsumerRecord<?, String> record) throws Exception {
         ReportResult reportResult = objectMapper.readValue(record.value(), ReportResult.class);
-        LoadTestReportResult testResult = new LoadTestReportResult();
-        testResult.setId(UUID.randomUUID().toString());
-        testResult.setReportId(reportResult.getReportId());
-        testResult.setReportKey(reportResult.getReportKey());
-        testResult.setReportValue(objectMapper.writeValueAsString(reportResult.getContent()));
-        testResultSaveService.saveResult(testResult);
+        LogUtil.debug("报告: {}, reportKey:{}", reportResult.getReportId(), reportResult.getReportKey());
         if (BooleanUtils.toBoolean(reportResult.getCompleted())) {
             testResultService.completeReport(reportResult.getReportId());
+            return;
         }
+
+        LoadTestReportResultPart testResult = new LoadTestReportResultPart();
+        testResult.setReportId(reportResult.getReportId());
+        testResult.setReportKey(reportResult.getReportKey());
+        testResult.setResourceIndex(reportResult.getResourceIndex());
+        testResult.setReportValue(objectMapper.writeValueAsString(reportResult.getContent()));
+        testResultSaveService.saveResultPart(testResult);
+        // 汇总信息
+        testResultSaveService.saveSummary(testResult.getReportId(), testResult.getReportKey());
+
     }
 }
