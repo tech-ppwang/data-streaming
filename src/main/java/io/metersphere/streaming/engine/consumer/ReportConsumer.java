@@ -3,6 +3,7 @@ package io.metersphere.streaming.engine.consumer;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.metersphere.streaming.base.domain.LoadTestReportResultPart;
+import io.metersphere.streaming.commons.constants.ReportKeys;
 import io.metersphere.streaming.commons.utils.LogUtil;
 import io.metersphere.streaming.model.ReportResult;
 import io.metersphere.streaming.service.TestResultSaveService;
@@ -14,9 +15,14 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Service
 public class ReportConsumer {
@@ -28,7 +34,11 @@ public class ReportConsumer {
     @Resource
     private TestResultService testResultService;
 
-    private final ExecutorService executorService = Executors.newFixedThreadPool(10);
+    private final ThreadPoolExecutor executor = new ThreadPoolExecutor(10, 10,
+            0L, TimeUnit.MILLISECONDS,
+            new LinkedBlockingQueue<>());
+
+    private ConcurrentHashMap<String, Boolean> reportRunning = new ConcurrentHashMap<>();
 
     @KafkaListener(id = CONSUME_ID, topics = "${kafka.report.topic}", groupId = "${spring.kafka.consumer.group-id}")
     public void consume(ConsumerRecord<?, String> record) throws Exception {
@@ -38,25 +48,44 @@ public class ReportConsumer {
             return;
         }
         ReportResult reportResult = content.get(0);
-        LogUtil.info("处理报告: reportId:{}", reportResult.getReportId());
+        String reportId = reportResult.getReportId();
         if (BooleanUtils.toBoolean(reportResult.getCompleted())) {
-            testResultService.completeReport(reportResult.getReportId());
+            reportRunning.remove(reportId);
+
+            testResultService.completeReport(reportId);
+            // 最后汇总所有的信息
+            List<String> reportKeys = Arrays.stream(ReportKeys.values()).map(Enum::name).collect(Collectors.toList());
+            executor.submit(() -> testResultSaveService.saveAllSummary(reportId, reportKeys));
             return;
         }
-        Runnable task = () -> content.forEach(result -> {
-            try {
-                LoadTestReportResultPart testResult = new LoadTestReportResultPart();
-                testResult.setReportId(result.getReportId());
-                testResult.setReportKey(result.getReportKey());
-                testResult.setResourceIndex(result.getResourceIndex());
-                testResult.setReportValue(objectMapper.writeValueAsString(result.getContent()));
-                testResultSaveService.saveResultPart(testResult);
-                // 汇总信息
-                testResultSaveService.saveSummary(testResult.getReportId(), testResult.getReportKey());
-            } catch (Exception e) {
-                LogUtil.error("接收结果处理异常: ", e);
-            }
-        });
-        executorService.submit(task);
+        if (reportRunning.getOrDefault(reportId, false)) {
+            // 正在处理
+            LogUtil.info("别的线程处理报告: reportId:{}", reportId);
+            return;
+        }
+        LogUtil.info("处理报告: reportId:{}", reportId);
+        Runnable task = () -> {
+            List<String> reportKeys = new ArrayList<>();
+            content.forEach(result -> {
+                try {
+                    reportKeys.add(result.getReportKey());
+
+                    LoadTestReportResultPart testResult = new LoadTestReportResultPart();
+                    testResult.setReportId(result.getReportId());
+                    testResult.setReportKey(result.getReportKey());
+                    testResult.setResourceIndex(result.getResourceIndex());
+                    testResult.setReportValue(objectMapper.writeValueAsString(result.getContent()));
+                    testResultSaveService.saveResultPart(testResult);
+                } catch (Exception e) {
+                    LogUtil.error("接收结果处理异常: ", e);
+                }
+            });
+            // 汇总信息
+            testResultSaveService.saveAllSummary(reportId, reportKeys);
+            // 处理完成重置
+            reportRunning.remove(reportId);
+        };
+        executor.submit(task);
+        reportRunning.put(reportId, true);
     }
 }

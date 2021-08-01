@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -84,6 +85,12 @@ public class TestResultSaveService {
             saveResult(record);
         } catch (Exception e) {
             LogUtil.error(e);
+        }
+    }
+
+    public void saveAllSummary(String reportId, List<String> reportKeys) {
+        for (String key : reportKeys) {
+            saveSummary(reportId, key);
         }
     }
 }
