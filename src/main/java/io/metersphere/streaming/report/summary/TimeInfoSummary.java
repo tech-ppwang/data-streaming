@@ -5,6 +5,8 @@ import io.metersphere.streaming.commons.utils.LogUtil;
 import io.metersphere.streaming.report.base.ReportTimeInfo;
 import org.springframework.stereotype.Component;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.concurrent.atomic.AtomicReference;
 
 @Component("timeInfoSummary")
@@ -36,7 +38,9 @@ public class TimeInfoSummary extends AbstractSummary<ReportTimeInfo> {
                 if (reportContent.getEndTime() > reportTimeInfo.getEndTime()) {
                     reportTimeInfo.setEndTime(reportContent.getEndTime());
                 }
-                reportTimeInfo.setDuration(reportTimeInfo.getEndTime() - reportTimeInfo.getStartTime());
+                long seconds = Duration.between(Instant.ofEpochMilli(reportTimeInfo.getStartTime()), Instant.ofEpochMilli((reportTimeInfo.getEndTime()))).getSeconds();
+
+                reportTimeInfo.setDuration(seconds);
                 result.set(reportTimeInfo);
 
             } catch (Exception e) {
