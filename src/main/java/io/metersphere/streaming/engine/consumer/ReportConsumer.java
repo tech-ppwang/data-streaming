@@ -46,9 +46,9 @@ public class ReportConsumer {
         Runnable task = () -> content.forEach(result -> {
             try {
                 LoadTestReportResultPart testResult = new LoadTestReportResultPart();
-                testResult.setReportId(reportResult.getReportId());
-                testResult.setReportKey(reportResult.getReportKey());
-                testResult.setResourceIndex(reportResult.getResourceIndex());
+                testResult.setReportId(result.getReportId());
+                testResult.setReportKey(result.getReportKey());
+                testResult.setResourceIndex(result.getResourceIndex());
                 testResult.setReportValue(objectMapper.writeValueAsString(result.getContent()));
                 testResultSaveService.saveResultPart(testResult);
                 // 汇总信息

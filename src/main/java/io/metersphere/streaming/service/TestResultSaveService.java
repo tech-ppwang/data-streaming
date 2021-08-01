@@ -14,7 +14,6 @@ import io.metersphere.streaming.commons.constants.ReportKeys;
 import io.metersphere.streaming.commons.constants.TestStatus;
 import io.metersphere.streaming.commons.utils.LogUtil;
 import io.metersphere.streaming.report.summary.SummaryFactory;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -74,7 +73,6 @@ public class TestResultSaveService {
         extLoadTestMapper.updateStatus(report.getTestId(), TestStatus.Running.name(), TestStatus.Starting.name());
     }
 
-    @Async
     public void saveSummary(String reportId, String reportKey) {
         try {
             Object summary = SummaryFactory.getSummaryExecutor(reportKey).execute(reportId);
