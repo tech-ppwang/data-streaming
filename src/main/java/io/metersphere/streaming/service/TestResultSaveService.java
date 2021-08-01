@@ -14,6 +14,7 @@ import io.metersphere.streaming.commons.constants.ReportKeys;
 import io.metersphere.streaming.commons.constants.TestStatus;
 import io.metersphere.streaming.commons.utils.LogUtil;
 import io.metersphere.streaming.report.summary.SummaryFactory;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -85,7 +86,7 @@ public class TestResultSaveService {
             record.setReportValue(objectMapper.writeValueAsString(summary));
             saveResult(record);
         } catch (Exception e) {
-            LogUtil.error(e);
+            LogUtil.error("保存 [" + reportId + "], [" + reportKey + "] 报错了", e);
         }
     }
 

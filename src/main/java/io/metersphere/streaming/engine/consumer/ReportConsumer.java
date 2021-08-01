@@ -14,7 +14,6 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
 
@@ -74,7 +73,7 @@ public class ReportConsumer {
             }
 
             long start = System.currentTimeMillis();
-            List<String> reportKeys = new ArrayList<>();
+            List<String> reportKeys = new CopyOnWriteArrayList<>();
             CountDownLatch countDownLatch = new CountDownLatch(content.size());
             content.forEach(result -> summaryExecutor.submit(() -> {
                 String reportKey = result.getReportKey();
