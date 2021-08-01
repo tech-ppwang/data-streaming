@@ -20,6 +20,10 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.Resource;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @Transactional(rollbackFor = Exception.class)
@@ -38,6 +42,10 @@ public class TestResultSaveService {
     private LoadTestReportMapper loadTestReportMapper;
     @Resource
     private ObjectMapper objectMapper;
+
+    private final ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(30, 30,
+            0L, TimeUnit.MILLISECONDS,
+            new LinkedBlockingQueue<>());
 
     public void saveResult(LoadTestReportResult record) {
         int i = extLoadTestReportResultMapper.updateReportValue(record);
@@ -62,19 +70,12 @@ public class TestResultSaveService {
     }
 
     public void saveResultPart(LoadTestReportResultPart testResult) {
-        LoadTestReportWithBLOBs report = loadTestReportMapper.selectByPrimaryKey(testResult.getReportId());
-        if (report == null) {
-            LogUtil.warn("报告不存在: {}", testResult.getReportId());
-            return;
-        }
         if (loadTestReportResultPartMapper.updateByPrimaryKeyWithBLOBs(testResult) == 0) {
             loadTestReportResultPartMapper.insert(testResult);
         }
-        extLoadTestReportMapper.updateStatus(testResult.getReportId(), TestStatus.Running.name(), TestStatus.Starting.name());
-        extLoadTestMapper.updateStatus(report.getTestId(), TestStatus.Running.name(), TestStatus.Starting.name());
     }
 
-    public void saveSummary(String reportId, String reportKey) {
+    private void saveSummary(String reportId, String reportKey) {
         try {
             Object summary = SummaryFactory.getSummaryExecutor(reportKey).execute(reportId);
             LoadTestReportResult record = new LoadTestReportResult();
@@ -89,8 +90,33 @@ public class TestResultSaveService {
     }
 
     public void saveAllSummary(String reportId, List<String> reportKeys) {
+        CountDownLatch countDownLatch = new CountDownLatch(reportKeys.size());
         for (String key : reportKeys) {
-            saveSummary(reportId, key);
+            threadPoolExecutor.execute(() -> {
+                try {
+                    saveSummary(reportId, key);
+                } catch (Exception e) {
+                    LogUtil.error("reportId: " + reportId + ", key:" + key, e);
+                } finally {
+                    countDownLatch.countDown();
+                }
+            });
         }
+        try {
+            countDownLatch.await();
+        } catch (Exception e) {
+            LogUtil.error(e);
+        }
+    }
+
+    public boolean updateReportStatus(String reportId) {
+        LoadTestReportWithBLOBs report = loadTestReportMapper.selectByPrimaryKey(reportId);
+        if (report == null) {
+            LogUtil.warn("报告不存在: {}", reportId);
+            return false;
+        }
+        extLoadTestReportMapper.updateStatus(reportId, TestStatus.Running.name(), TestStatus.Starting.name());
+        extLoadTestMapper.updateStatus(report.getTestId(), TestStatus.Running.name(), TestStatus.Starting.name());
+        return true;
     }
 }
