@@ -32,15 +32,19 @@ public class ReportConsumer {
             testResultService.completeReport(reportResult.getReportId());
             return;
         }
+        try {
 
-        LoadTestReportResultPart testResult = new LoadTestReportResultPart();
-        testResult.setReportId(reportResult.getReportId());
-        testResult.setReportKey(reportResult.getReportKey());
-        testResult.setResourceIndex(reportResult.getResourceIndex());
-        testResult.setReportValue(objectMapper.writeValueAsString(reportResult.getContent()));
-        testResultSaveService.saveResultPart(testResult);
-        // 汇总信息
-        testResultSaveService.saveSummary(testResult.getReportId(), testResult.getReportKey());
+            LoadTestReportResultPart testResult = new LoadTestReportResultPart();
+            testResult.setReportId(reportResult.getReportId());
+            testResult.setReportKey(reportResult.getReportKey());
+            testResult.setResourceIndex(reportResult.getResourceIndex());
+            testResult.setReportValue(objectMapper.writeValueAsString(reportResult.getContent()));
+            testResultSaveService.saveResultPart(testResult);
+            // 汇总信息
+            testResultSaveService.saveSummary(testResult.getReportId(), testResult.getReportKey());
+        } catch (Exception e) {
+            LogUtil.error("接收结果处理异常: ", e);
+        }
 
     }
 }
