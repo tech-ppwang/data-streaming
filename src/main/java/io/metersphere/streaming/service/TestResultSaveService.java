@@ -1,7 +1,9 @@
 package io.metersphere.streaming.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.metersphere.streaming.base.domain.LoadTestReportResult;
+import io.metersphere.streaming.base.domain.LoadTestReportResultExample;
 import io.metersphere.streaming.base.domain.LoadTestReportResultPart;
 import io.metersphere.streaming.base.domain.LoadTestReportWithBLOBs;
 import io.metersphere.streaming.base.mapper.LoadTestReportMapper;
@@ -13,6 +15,8 @@ import io.metersphere.streaming.base.mapper.ext.ExtLoadTestReportResultMapper;
 import io.metersphere.streaming.commons.constants.ReportKeys;
 import io.metersphere.streaming.commons.constants.TestStatus;
 import io.metersphere.streaming.commons.utils.LogUtil;
+import io.metersphere.streaming.report.base.ReportTimeInfo;
+import io.metersphere.streaming.report.base.TestOverview;
 import io.metersphere.streaming.report.summary.SummaryFactory;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
@@ -107,6 +111,9 @@ public class TestResultSaveService {
             countDownLatch.await();
         } catch (Exception e) {
             LogUtil.error(e);
+        } finally {
+            saveReportOverview(reportId);
+            saveReportTimeInfo(reportId);
         }
     }
 
@@ -120,4 +127,47 @@ public class TestResultSaveService {
         extLoadTestMapper.updateStatus(report.getTestId(), TestStatus.Running.name(), TestStatus.Starting.name());
         return true;
     }
+
+    public void saveReportOverview(String reportId) {
+        LoadTestReportResultExample example1 = new LoadTestReportResultExample();
+        example1.createCriteria().andReportIdEqualTo(reportId).andReportKeyEqualTo(ReportKeys.Overview.name());
+        List<LoadTestReportResult> loadTestReportResults = loadTestReportResultMapper.selectByExampleWithBLOBs(example1);
+        if (loadTestReportResults.size() > 0) {
+            LoadTestReportResult loadTestReportResult = loadTestReportResults.get(0);
+            String reportValue = loadTestReportResult.getReportValue();
+            try {
+                TestOverview testOverview = objectMapper.readValue(reportValue, TestOverview.class);
+                LoadTestReportWithBLOBs report = new LoadTestReportWithBLOBs();
+                report.setId(reportId);
+                report.setMaxUsers(testOverview.getMaxUsers());
+                report.setAvgResponseTime(testOverview.getAvgResponseTime());
+                report.setTps(testOverview.getAvgTransactions());
+                loadTestReportMapper.updateByPrimaryKeySelective(report);
+            } catch (JsonProcessingException e) {
+                LogUtil.error(e);
+            }
+        }
+    }
+
+    public void saveReportTimeInfo(String reportId) {
+        LoadTestReportResultExample example1 = new LoadTestReportResultExample();
+        example1.createCriteria().andReportIdEqualTo(reportId).andReportKeyEqualTo(ReportKeys.TimeInfo.name());
+        List<LoadTestReportResult> loadTestReportResults = loadTestReportResultMapper.selectByExampleWithBLOBs(example1);
+        if (loadTestReportResults.size() > 0) {
+            LoadTestReportResult loadTestReportResult = loadTestReportResults.get(0);
+            String reportValue = loadTestReportResult.getReportValue();
+            try {
+                ReportTimeInfo timeInfo = objectMapper.readValue(reportValue, ReportTimeInfo.class);
+                LoadTestReportWithBLOBs report = new LoadTestReportWithBLOBs();
+                report.setId(reportId);
+                report.setTestStartTime(timeInfo.getStartTime());
+                report.setTestEndTime(timeInfo.getEndTime());
+                report.setTestDuration(timeInfo.getDuration());
+                loadTestReportMapper.updateByPrimaryKeySelective(report);
+            } catch (JsonProcessingException e) {
+                LogUtil.error(e);
+            }
+        }
+    }
+
 }

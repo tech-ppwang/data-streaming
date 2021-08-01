@@ -310,51 +310,9 @@ public class TestResultService {
         } catch (InterruptedException e) {
             LogUtil.error(e);
         } finally {
-            saveReportOverview(reportId);
-            saveReportTimeInfo(reportId);
+            testResultSaveService.saveReportOverview(reportId);
+            testResultSaveService.saveReportTimeInfo(reportId);
             testResultSaveService.saveReportReadyStatus(reportId);
-        }
-    }
-
-    private void saveReportOverview(String reportId) {
-        LoadTestReportResultExample example1 = new LoadTestReportResultExample();
-        example1.createCriteria().andReportIdEqualTo(reportId).andReportKeyEqualTo(ReportKeys.Overview.name());
-        List<LoadTestReportResult> loadTestReportResults = loadTestReportResultMapper.selectByExampleWithBLOBs(example1);
-        if (loadTestReportResults.size() > 0) {
-            LoadTestReportResult loadTestReportResult = loadTestReportResults.get(0);
-            String reportValue = loadTestReportResult.getReportValue();
-            try {
-                TestOverview testOverview = objectMapper.readValue(reportValue, TestOverview.class);
-                LoadTestReportWithBLOBs report = new LoadTestReportWithBLOBs();
-                report.setId(reportId);
-                report.setMaxUsers(testOverview.getMaxUsers());
-                report.setAvgResponseTime(testOverview.getAvgResponseTime());
-                report.setTps(testOverview.getAvgTransactions());
-                loadTestReportMapper.updateByPrimaryKeySelective(report);
-            } catch (JsonProcessingException e) {
-                LogUtil.error(e);
-            }
-        }
-    }
-
-    private void saveReportTimeInfo(String reportId) {
-        LoadTestReportResultExample example1 = new LoadTestReportResultExample();
-        example1.createCriteria().andReportIdEqualTo(reportId).andReportKeyEqualTo(ReportKeys.TimeInfo.name());
-        List<LoadTestReportResult> loadTestReportResults = loadTestReportResultMapper.selectByExampleWithBLOBs(example1);
-        if (loadTestReportResults.size() > 0) {
-            LoadTestReportResult loadTestReportResult = loadTestReportResults.get(0);
-            String reportValue = loadTestReportResult.getReportValue();
-            try {
-                ReportTimeInfo timeInfo = objectMapper.readValue(reportValue, ReportTimeInfo.class);
-                LoadTestReportWithBLOBs report = new LoadTestReportWithBLOBs();
-                report.setId(reportId);
-                report.setTestStartTime(timeInfo.getStartTime());
-                report.setTestEndTime(timeInfo.getEndTime());
-                report.setTestDuration(timeInfo.getDuration());
-                loadTestReportMapper.updateByPrimaryKeySelective(report);
-            } catch (JsonProcessingException e) {
-                LogUtil.error(e);
-            }
         }
     }
 
