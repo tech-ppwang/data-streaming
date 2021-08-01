@@ -62,11 +62,15 @@ public class TestResultSaveService {
     }
 
     public void saveResultPart(LoadTestReportResultPart testResult) {
+        LoadTestReportWithBLOBs report = loadTestReportMapper.selectByPrimaryKey(testResult.getReportId());
+        if (report == null) {
+            LogUtil.warn("报告不存在: {}", testResult.getReportId());
+            return;
+        }
         if (loadTestReportResultPartMapper.updateByPrimaryKeyWithBLOBs(testResult) == 0) {
             loadTestReportResultPartMapper.insert(testResult);
         }
         extLoadTestReportMapper.updateStatus(testResult.getReportId(), TestStatus.Running.name(), TestStatus.Starting.name());
-        LoadTestReportWithBLOBs report = loadTestReportMapper.selectByPrimaryKey(testResult.getReportId());
         extLoadTestMapper.updateStatus(report.getTestId(), TestStatus.Running.name(), TestStatus.Starting.name());
     }
 
