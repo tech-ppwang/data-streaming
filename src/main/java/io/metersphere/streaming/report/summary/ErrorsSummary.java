@@ -38,33 +38,26 @@ public class ErrorsSummary extends AbstractSummary<List<Errors>> {
                 // 第二遍以后
                 result.addAll(reportContent);
 
+                BigDecimal errors = result.stream().map(e -> new BigDecimal(e.getErrorNumber())).reduce(BigDecimal::add).get();
+
                 Map<String, List<Errors>> collect = result.stream().collect(Collectors.groupingBy(Errors::getErrorType));
+
                 List<Errors> summaryDataList = collect.keySet().stream().map(k -> {
 
                     List<Errors> errorsList = collect.get(k);
-                    BigDecimal samples = errorsList.stream()
-                            .map(e -> {
-                                BigDecimal divisor = new BigDecimal(e.getPercentOfAllSamples()).divide(oneHundred);
-                                return new BigDecimal(e.getErrorNumber()).divide(divisor, 4, BigDecimal.ROUND_HALF_UP);
-                            })
-                            .reduce(BigDecimal::add)
-                            .get();
-
-                    BigDecimal errors = errorsList.stream()
-                            .map(e -> {
-                                BigDecimal divisor = new BigDecimal(e.getPercentOfErrors()).divide(oneHundred);
-                                return new BigDecimal(e.getErrorNumber()).divide(divisor, 4, BigDecimal.ROUND_HALF_UP);
-                            })
+                    BigDecimal percentOfAllSamples = errorsList.stream()
+                            .map(e -> new BigDecimal(e.getPercentOfAllSamples()))
                             .reduce(BigDecimal::add)
                             .get();
 
 
                     Errors c = new Errors();
-                    BigDecimal eSum = collect.get(k).stream().map(e -> new BigDecimal(e.getErrorNumber())).reduce(new BigDecimal(0), BigDecimal::add);
+                    BigDecimal eSum = errorsList.stream().map(e -> new BigDecimal(e.getErrorNumber())).reduce(BigDecimal::add).get();
                     c.setErrorType(k);
                     c.setErrorNumber(eSum.toString());
                     c.setPercentOfErrors(format.format(eSum.divide(errors, 4, BigDecimal.ROUND_HALF_UP).multiply(oneHundred)));
-                    c.setPercentOfAllSamples(format.format(eSum.divide(samples, 4, BigDecimal.ROUND_HALF_UP).multiply(oneHundred)));
+                    // 这个值有误差
+                    c.setPercentOfAllSamples(format.format(percentOfAllSamples.divide(new BigDecimal(collect.get(k).size()), 4, BigDecimal.ROUND_HALF_UP)));
                     return c;
                 }).collect(Collectors.toList());
                 // 清空
