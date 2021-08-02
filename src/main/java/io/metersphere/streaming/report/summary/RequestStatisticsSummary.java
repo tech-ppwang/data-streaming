@@ -5,6 +5,7 @@ import io.metersphere.streaming.commons.constants.ReportKeys;
 import io.metersphere.streaming.commons.utils.LogUtil;
 import io.metersphere.streaming.report.base.Statistics;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -63,6 +64,11 @@ public class RequestStatisticsSummary extends AbstractSummary<List<Statistics>> 
             statistics.setTp95(format.format(new BigDecimal(statistics.getTp95()).divide(divisor, 4, BigDecimal.ROUND_HALF_UP).multiply(oneHundred)));
             statistics.setTp99(format.format(new BigDecimal(statistics.getTp99()).divide(divisor, 4, BigDecimal.ROUND_HALF_UP).multiply(oneHundred)));
         });
+
+        // 把 total 放到最后
+        List<Statistics> total = result.stream().filter(r -> StringUtils.equalsAnyIgnoreCase(r.getLabel(), "Total")).collect(Collectors.toList());
+        result.removeAll(total);
+        result.addAll(total);
         return result;
     }
 
