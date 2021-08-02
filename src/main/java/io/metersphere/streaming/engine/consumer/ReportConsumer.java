@@ -35,7 +35,7 @@ public class ReportConsumer {
             0L, TimeUnit.MILLISECONDS,
             new LinkedBlockingQueue<>());
 
-    private ConcurrentHashMap<String, Boolean> reportRunning = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, Boolean> reportRunning = new ConcurrentHashMap<>();
 
     @KafkaListener(id = CONSUME_ID, topics = "${kafka.report.topic}", groupId = "${spring.kafka.consumer.group-id}")
     public void consume(ConsumerRecord<?, String> record) throws Exception {
@@ -46,31 +46,34 @@ public class ReportConsumer {
         }
         ReportResult reportResult = content.get(0);
         String reportId = reportResult.getReportId();
+        int resourceIndex = reportResult.getResourceIndex();
         if (BooleanUtils.toBoolean(reportResult.getCompleted())) {
             testResultService.completeReport(reportId);
             // 最后汇总所有的信息
-            Runnable task = getTask(content, reportId);
+            Runnable task = getTask(content, reportId, resourceIndex);
             executor.submit(task);
             return;
         }
-        if (reportRunning.getOrDefault(reportId, false)) {
+        String key = reportId + "_" + resourceIndex;
+        if (reportRunning.getOrDefault(key, false)) {
             // 正在处理
             LogUtil.info("别的线程处理报告: reportId:{}", reportId);
             return;
         }
         LogUtil.info("处理报告: reportId:{}", reportId);
-        Runnable task = getTask(content, reportId);
-        reportRunning.put(reportId, true);
+        Runnable task = getTask(content, reportId, resourceIndex);
+        reportRunning.put(key, true);
         executor.submit(task);
     }
 
-    private Runnable getTask(List<ReportResult> content, String reportId) {
+    private Runnable getTask(List<ReportResult> content, String reportId, int resourceIndex) {
         return () -> {
 
+            String key = reportId + "_" + resourceIndex;
             boolean b = testResultSaveService.checkReportStatus(reportId);
             if (!b) {
                 // 报告不存在
-                reportRunning.remove(reportId);
+                reportRunning.remove(key);
                 return;
             }
 
@@ -103,7 +106,7 @@ public class ReportConsumer {
                 // 汇总信息
                 testResultSaveService.saveAllSummary(reportId, reportKeys);
                 // 处理完成重置
-                reportRunning.remove(reportId);
+                reportRunning.remove(key);
                 LogUtil.debug("报告: " + reportId + ", 汇总耗时: " + (System.currentTimeMillis() - summaryStart));
             } catch (InterruptedException e) {
                 LogUtil.error(e);
