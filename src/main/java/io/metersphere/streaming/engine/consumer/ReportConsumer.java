@@ -57,10 +57,10 @@ public class ReportConsumer {
         String key = reportId + "_" + resourceIndex;
         if (reportRunning.getOrDefault(key, false)) {
             // 正在处理
-            LogUtil.info("别的线程处理报告: reportId:{}", reportId);
+            LogUtil.info("别的线程处理报告: reportId_resourceIndex: {}", key);
             return;
         }
-        LogUtil.info("处理报告: reportId:{}", reportId);
+        LogUtil.info("处理报告: reportId_resourceIndex: {}", key);
         Runnable task = getTask(content, reportId, resourceIndex);
         reportRunning.put(key, true);
         executor.submit(task);
