@@ -60,15 +60,17 @@ public class ReportConsumer {
         }
         LogUtil.info("处理报告: reportId:{}", reportId);
         Runnable task = getTask(content, reportId);
-        executor.submit(task);
         reportRunning.put(reportId, true);
+        executor.submit(task);
     }
 
     private Runnable getTask(List<ReportResult> content, String reportId) {
         return () -> {
 
-            boolean b = testResultSaveService.updateReportStatus(reportId);
+            boolean b = testResultSaveService.checkReportStatus(reportId);
             if (!b) {
+                // 报告不存在
+                reportRunning.remove(reportId);
                 return;
             }
 

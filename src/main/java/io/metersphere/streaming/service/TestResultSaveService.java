@@ -117,7 +117,7 @@ public class TestResultSaveService {
         }
     }
 
-    public boolean updateReportStatus(String reportId) {
+    public boolean checkReportStatus(String reportId) {
         LoadTestReportWithBLOBs report = loadTestReportMapper.selectByPrimaryKey(reportId);
         if (report == null) {
             LogUtil.warn("报告不存在: {}", reportId);
