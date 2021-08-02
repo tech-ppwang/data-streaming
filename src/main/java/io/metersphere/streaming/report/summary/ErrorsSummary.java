@@ -57,7 +57,7 @@ public class ErrorsSummary extends AbstractSummary<List<Errors>> {
                     c.setErrorNumber(eSum.toString());
                     c.setPercentOfErrors(format.format(eSum.divide(errors, 4, BigDecimal.ROUND_HALF_UP).multiply(oneHundred)));
                     // 这个值有误差
-                    c.setPercentOfAllSamples(format.format(percentOfAllSamples.divide(new BigDecimal(collect.get(k).size()), 4, BigDecimal.ROUND_HALF_UP)));
+                    c.setPercentOfAllSamples(percentOfAllSamples.toString());
                     return c;
                 }).collect(Collectors.toList());
                 // 清空
@@ -69,7 +69,11 @@ public class ErrorsSummary extends AbstractSummary<List<Errors>> {
                 LogUtil.error(e);
             }
         };
-        selectPartAndDoSummary(reportId, getReportKey(), action);
+        int count = selectPartAndDoSummary(reportId, getReportKey(), action);
+        result.forEach(e -> {
+            // 这个值有误差
+            e.setPercentOfAllSamples(format.format(new BigDecimal(e.getPercentOfAllSamples()).divide(new BigDecimal(count), 4, BigDecimal.ROUND_HALF_UP)));
+        });
         return result;
     }
 }
