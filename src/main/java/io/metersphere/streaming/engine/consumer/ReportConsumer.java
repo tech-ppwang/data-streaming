@@ -48,9 +48,9 @@ public class ReportConsumer {
         String reportId = reportResult.getReportId();
         int resourceIndex = reportResult.getResourceIndex();
         if (BooleanUtils.toBoolean(reportResult.getCompleted())) {
-            testResultService.completeReport(reportId);
+            CallbackAction action = () -> testResultService.completeReport(reportId);
             // 最后汇总所有的信息
-            Runnable task = getTask(content, reportId, resourceIndex);
+            Runnable task = getTask(content, reportId, resourceIndex, action);
             executor.submit(task);
             return;
         }
@@ -61,14 +61,13 @@ public class ReportConsumer {
             return;
         }
         LogUtil.info("处理报告: reportId_resourceIndex: {}", key);
-        Runnable task = getTask(content, reportId, resourceIndex);
+        Runnable task = getTask(content, reportId, resourceIndex, null);
         reportRunning.put(key, true);
         executor.submit(task);
     }
 
-    private Runnable getTask(List<ReportResult> content, String reportId, int resourceIndex) {
+    private Runnable getTask(List<ReportResult> content, String reportId, int resourceIndex, CallbackAction action) {
         return () -> {
-
             String key = reportId + "_" + resourceIndex;
             boolean b = testResultSaveService.checkReportStatus(reportId);
             if (!b) {
@@ -108,9 +107,13 @@ public class ReportConsumer {
                 // 处理完成重置
                 reportRunning.remove(key);
                 LogUtil.debug("报告: " + reportId + ", 汇总耗时: " + (System.currentTimeMillis() - summaryStart));
+                if (action != null) {
+                    action.execute();
+                }
             } catch (InterruptedException e) {
                 LogUtil.error(e);
             }
         };
     }
+
 }
