@@ -58,11 +58,11 @@ public class RequestStatisticsSummary extends AbstractSummary<List<Statistics>> 
         BigDecimal divisor = new BigDecimal(count);
         result.forEach(statistics -> {
             statistics.setError(format.format(new BigDecimal(statistics.getFail()).divide(new BigDecimal(statistics.getSamples()), 4, BigDecimal.ROUND_HALF_UP).multiply(oneHundred)));
-            statistics.setAverage(format.format(new BigDecimal(statistics.getAverage()).divide(divisor, 4, BigDecimal.ROUND_HALF_UP).multiply(oneHundred)));
-            statistics.setMedian(format.format(new BigDecimal(statistics.getMedian()).divide(divisor, 4, BigDecimal.ROUND_HALF_UP).multiply(oneHundred)));
-            statistics.setTp90(format.format(new BigDecimal(statistics.getTp90()).divide(divisor, 4, BigDecimal.ROUND_HALF_UP).multiply(oneHundred)));
-            statistics.setTp95(format.format(new BigDecimal(statistics.getTp95()).divide(divisor, 4, BigDecimal.ROUND_HALF_UP).multiply(oneHundred)));
-            statistics.setTp99(format.format(new BigDecimal(statistics.getTp99()).divide(divisor, 4, BigDecimal.ROUND_HALF_UP).multiply(oneHundred)));
+            statistics.setAverage(format.format(new BigDecimal(statistics.getAverage()).divide(divisor, 4, BigDecimal.ROUND_HALF_UP)));
+            statistics.setMedian(format.format(new BigDecimal(statistics.getMedian()).divide(divisor, 4, BigDecimal.ROUND_HALF_UP)));
+            statistics.setTp90(format.format(new BigDecimal(statistics.getTp90()).divide(divisor, 4, BigDecimal.ROUND_HALF_UP)));
+            statistics.setTp95(format.format(new BigDecimal(statistics.getTp95()).divide(divisor, 4, BigDecimal.ROUND_HALF_UP)));
+            statistics.setTp99(format.format(new BigDecimal(statistics.getTp99()).divide(divisor, 4, BigDecimal.ROUND_HALF_UP)));
         });
 
         // 把 total 放到最后
