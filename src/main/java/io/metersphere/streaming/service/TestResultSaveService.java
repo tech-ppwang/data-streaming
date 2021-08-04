@@ -93,12 +93,7 @@ public class TestResultSaveService {
         }
     }
 
-    public void saveAllSummary(String reportId, List<String> reportKeys) {
-        if (!isReportingSet(reportId)) {
-            LogUtil.info("有其他线程正在执行汇总 {}", reportId);
-            return;
-        }
-
+    public void forceSaveAllSummary(String reportId, List<String> reportKeys) {
         CountDownLatch countDownLatch = new CountDownLatch(reportKeys.size());
         for (String key : reportKeys) {
             threadPoolExecutor.execute(() -> {
@@ -120,6 +115,14 @@ public class TestResultSaveService {
             saveReportTimeInfo(reportId);
             saveReportReadyStatus(reportId);
         }
+    }
+
+    public void saveAllSummary(String reportId, List<String> reportKeys) {
+        if (!isReportingSet(reportId)) {
+            LogUtil.info("有其他线程正在执行汇总 {}", reportId);
+            return;
+        }
+        forceSaveAllSummary(reportId, reportKeys);
     }
 
     public boolean checkReportStatus(String reportId) {
@@ -174,5 +177,4 @@ public class TestResultSaveService {
             }
         }
     }
-
 }

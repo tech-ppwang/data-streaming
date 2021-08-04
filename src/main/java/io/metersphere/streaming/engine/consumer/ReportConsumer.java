@@ -106,10 +106,11 @@ public class ReportConsumer {
                 testResultSaveService.saveAllSummary(reportId, reportKeys);
                 // 处理完成重置
                 reportRunning.remove(key);
-                LogUtil.debug("报告: " + reportId + ", 汇总耗时: " + (System.currentTimeMillis() - summaryStart));
                 if (action != null) {
+                    testResultSaveService.forceSaveAllSummary(reportId, reportKeys);
                     action.execute();
                 }
+                LogUtil.debug("报告: " + reportId + ", 汇总耗时: " + (System.currentTimeMillis() - summaryStart));
             } catch (InterruptedException e) {
                 LogUtil.error(e);
             }
