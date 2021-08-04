@@ -2,13 +2,11 @@ package io.metersphere.streaming.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.metersphere.streaming.base.domain.LoadTestReportResult;
-import io.metersphere.streaming.base.domain.LoadTestReportResultExample;
-import io.metersphere.streaming.base.domain.LoadTestReportResultPart;
-import io.metersphere.streaming.base.domain.LoadTestReportWithBLOBs;
+import io.metersphere.streaming.base.domain.*;
 import io.metersphere.streaming.base.mapper.LoadTestReportMapper;
 import io.metersphere.streaming.base.mapper.LoadTestReportResultMapper;
 import io.metersphere.streaming.base.mapper.LoadTestReportResultPartMapper;
+import io.metersphere.streaming.base.mapper.LoadTestReportResultRealtimeMapper;
 import io.metersphere.streaming.base.mapper.ext.ExtLoadTestMapper;
 import io.metersphere.streaming.base.mapper.ext.ExtLoadTestReportMapper;
 import io.metersphere.streaming.base.mapper.ext.ExtLoadTestReportResultMapper;
@@ -17,6 +15,7 @@ import io.metersphere.streaming.commons.constants.TestStatus;
 import io.metersphere.streaming.commons.utils.LogUtil;
 import io.metersphere.streaming.report.base.ReportTimeInfo;
 import io.metersphere.streaming.report.base.TestOverview;
+import io.metersphere.streaming.report.realtime.SummaryRealtimeFactory;
 import io.metersphere.streaming.report.summary.SummaryFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,6 +35,8 @@ public class TestResultSaveService {
     private LoadTestReportResultMapper loadTestReportResultMapper;
     @Resource
     private LoadTestReportResultPartMapper loadTestReportResultPartMapper;
+    @Resource
+    private LoadTestReportResultRealtimeMapper loadTestReportResultRealtimeMapper;
     @Resource
     private ExtLoadTestReportResultMapper extLoadTestReportResultMapper;
     @Resource
@@ -175,6 +176,44 @@ public class TestResultSaveService {
             } catch (JsonProcessingException e) {
                 LogUtil.error(e);
             }
+        }
+    }
+
+    public void saveResultRealtime(LoadTestReportResultRealtime testResult) {
+        loadTestReportResultRealtimeMapper.insert(testResult);
+    }
+
+    public void saveAllSummaryRealtime(String reportId, Integer resourceIndex, List<String> reportKeys) {
+        CountDownLatch countDownLatch = new CountDownLatch(reportKeys.size());
+        for (String key : reportKeys) {
+            threadPoolExecutor.execute(() -> {
+                try {
+                    saveSummaryRealtime(reportId, key, resourceIndex);
+                } catch (Exception e) {
+                    LogUtil.error("reportId: " + reportId + ", key:" + key, e);
+                } finally {
+                    countDownLatch.countDown();
+                }
+            });
+        }
+        try {
+            countDownLatch.await();
+        } catch (Exception e) {
+            LogUtil.error(e);
+        }
+    }
+
+    private void saveSummaryRealtime(String reportId, String reportKey, Integer resourceIndex) {
+        try {
+            Object summary = SummaryRealtimeFactory.getSummaryExecutor(reportKey).execute(reportId, resourceIndex);
+            LoadTestReportResultPart record = new LoadTestReportResultPart();
+            record.setReportId(reportId);
+            record.setReportKey(reportKey);
+            record.setResourceIndex(resourceIndex);
+            record.setReportValue(objectMapper.writeValueAsString(summary));
+            saveResultPart(record);
+        } catch (Exception e) {
+            LogUtil.error("保存 [" + reportId + "], [" + reportKey + "] 报错了", e);
         }
     }
 }

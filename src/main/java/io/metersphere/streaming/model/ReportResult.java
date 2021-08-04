@@ -9,6 +9,7 @@ public class ReportResult {
     private String reportId;
     private String reportKey;
     private Integer resourceIndex;
+    private Integer sort;
     private Boolean completed;
     private Object content;
 }
