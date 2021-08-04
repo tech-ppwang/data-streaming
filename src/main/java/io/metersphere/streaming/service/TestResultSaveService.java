@@ -18,7 +18,6 @@ import io.metersphere.streaming.commons.utils.LogUtil;
 import io.metersphere.streaming.report.base.ReportTimeInfo;
 import io.metersphere.streaming.report.base.TestOverview;
 import io.metersphere.streaming.report.summary.SummaryFactory;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -95,6 +94,11 @@ public class TestResultSaveService {
     }
 
     public void saveAllSummary(String reportId, List<String> reportKeys) {
+        if (!isReportingSet(reportId)) {
+            LogUtil.info("有其他线程正在执行汇总 {}", reportId);
+            return;
+        }
+
         CountDownLatch countDownLatch = new CountDownLatch(reportKeys.size());
         for (String key : reportKeys) {
             threadPoolExecutor.execute(() -> {
@@ -114,6 +118,7 @@ public class TestResultSaveService {
         } finally {
             saveReportOverview(reportId);
             saveReportTimeInfo(reportId);
+            saveReportReadyStatus(reportId);
         }
     }
 

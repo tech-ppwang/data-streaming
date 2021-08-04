@@ -31,7 +31,7 @@ public class ReportConsumer {
             0L, TimeUnit.MILLISECONDS,
             new LinkedBlockingQueue<>());
 
-    private final ThreadPoolExecutor summaryExecutor = new ThreadPoolExecutor(30, 30,
+    private final ThreadPoolExecutor saveExecutor = new ThreadPoolExecutor(30, 30,
             0L, TimeUnit.MILLISECONDS,
             new LinkedBlockingQueue<>());
 
@@ -79,7 +79,7 @@ public class ReportConsumer {
             long start = System.currentTimeMillis();
             List<String> reportKeys = new CopyOnWriteArrayList<>();
             CountDownLatch countDownLatch = new CountDownLatch(content.size());
-            content.forEach(result -> summaryExecutor.submit(() -> {
+            content.forEach(result -> saveExecutor.submit(() -> {
                 String reportKey = result.getReportKey();
                 try {
                     long summaryStart = System.currentTimeMillis();
