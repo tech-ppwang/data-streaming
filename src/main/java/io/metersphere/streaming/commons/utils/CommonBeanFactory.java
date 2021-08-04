@@ -24,5 +24,9 @@ public class CommonBeanFactory implements ApplicationContextAware {
     public static <T> T getBean(Class<T> className) {
         return context != null && className != null ? context.getBean(className) : null;
     }
+
+    public static <T> T getBean(String beanName, Class<T> className) {
+        return context != null && className != null && beanName != null ? context.getBean(beanName, className) : null;
+    }
 }
 

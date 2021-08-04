@@ -66,7 +66,7 @@ public abstract class AbstractSummaryRealtime<T> implements SummaryRealtime<T> {
                 result.addAll(summaryDataList);
                 // 返回
             } catch (Exception e) {
-                LogUtil.error(e);
+                LogUtil.error("getMaxAction: ", e);
             }
         };
     }

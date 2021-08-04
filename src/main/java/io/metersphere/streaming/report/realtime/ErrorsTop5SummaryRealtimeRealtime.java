@@ -111,7 +111,7 @@ public class ErrorsTop5SummaryRealtimeRealtime extends AbstractSummaryRealtime<L
                 result.addAll(summaryDataList);
                 // 返回
             } catch (Exception e) {
-                LogUtil.error(e);
+                LogUtil.error("ErrorsTop5SummaryRealtimeRealtime: ", e);
             }
         };
         selectRealtimeAndDoSummary(reportId, resourceIndex, getReportKey(), action);

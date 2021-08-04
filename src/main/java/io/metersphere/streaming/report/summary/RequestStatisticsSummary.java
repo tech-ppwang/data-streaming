@@ -51,7 +51,7 @@ public class RequestStatisticsSummary extends AbstractSummary<List<Statistics>> 
                 result.addAll(summaryDataList);
                 // 返回
             } catch (Exception e) {
-                LogUtil.error(e);
+                LogUtil.error("RequestStatisticsSummary: ", e);
             }
         };
         int count = selectPartAndDoSummary(reportId, getReportKey(), action);

@@ -60,7 +60,7 @@ public class OverviewSummaryRealtimeRealtime extends AbstractSummaryRealtime<Tes
                 result.set(testOverview);
 
             } catch (Exception e) {
-                LogUtil.error(e);
+                LogUtil.error("OverviewSummaryRealtimeRealtime:", e);
             }
         };
         selectRealtimeAndDoSummary(reportId, resourceIndex, getReportKey(), action);

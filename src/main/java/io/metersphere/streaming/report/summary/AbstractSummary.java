@@ -66,7 +66,7 @@ public abstract class AbstractSummary<T> implements Summary<T> {
                 result.addAll(summaryDataList);
                 // 返回
             } catch (Exception e) {
-                LogUtil.error(e);
+                LogUtil.error("getSumAction: ", e);
             }
         };
     }

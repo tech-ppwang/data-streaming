@@ -111,7 +111,7 @@ public class ErrorsTop5Summary extends AbstractSummary<List<ErrorsTop5>> {
                 result.addAll(summaryDataList);
                 // 返回
             } catch (Exception e) {
-                LogUtil.error(e);
+                LogUtil.error("ErrorsTop5Summary: ", e);
             }
         };
         selectPartAndDoSummary(reportId, getReportKey(), action);

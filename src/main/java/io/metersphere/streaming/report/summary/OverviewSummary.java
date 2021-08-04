@@ -44,7 +44,7 @@ public class OverviewSummary extends AbstractSummary<TestOverview> {
                 result.set(testOverview);
 
             } catch (Exception e) {
-                LogUtil.error(e);
+                LogUtil.error("OverviewSummary: ", e);
             }
         };
         int count = selectPartAndDoSummary(reportId, getReportKey(), action);

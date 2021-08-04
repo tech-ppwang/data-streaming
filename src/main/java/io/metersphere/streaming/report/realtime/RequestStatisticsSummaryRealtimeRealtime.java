@@ -54,7 +54,7 @@ public class RequestStatisticsSummaryRealtimeRealtime extends AbstractSummaryRea
                 result.addAll(summaryDataList);
                 // 返回
             } catch (Exception e) {
-                LogUtil.error(e);
+                LogUtil.error("RequestStatisticsSummaryRealtimeRealtime: ", e);
             }
         };
         selectRealtimeAndDoSummary(reportId, resourceIndex, getReportKey(), action);

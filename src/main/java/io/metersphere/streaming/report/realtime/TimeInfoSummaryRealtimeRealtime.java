@@ -44,7 +44,7 @@ public class TimeInfoSummaryRealtimeRealtime extends AbstractSummaryRealtime<Rep
                 result.set(reportTimeInfo);
 
             } catch (Exception e) {
-                LogUtil.error(e);
+                LogUtil.error("TimeInfoSummaryRealtimeRealtime: ", e);
             }
         };
         selectRealtimeAndDoSummary(reportId, resourceIndex, getReportKey(), action);

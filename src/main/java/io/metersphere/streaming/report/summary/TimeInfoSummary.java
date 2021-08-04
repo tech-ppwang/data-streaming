@@ -44,7 +44,7 @@ public class TimeInfoSummary extends AbstractSummary<ReportTimeInfo> {
                 result.set(reportTimeInfo);
 
             } catch (Exception e) {
-                LogUtil.error(e);
+                LogUtil.error("RequestStatisticsSummary", e);
             }
         };
         selectPartAndDoSummary(reportId, getReportKey(), action);

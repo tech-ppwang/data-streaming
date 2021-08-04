@@ -66,7 +66,7 @@ public class ErrorsSummary extends AbstractSummary<List<Errors>> {
                 result.addAll(summaryDataList);
                 // 返回
             } catch (Exception e) {
-                LogUtil.error(e);
+                LogUtil.error("ErrorsSummary: ", e);
             }
         };
         int count = selectPartAndDoSummary(reportId, getReportKey(), action);
