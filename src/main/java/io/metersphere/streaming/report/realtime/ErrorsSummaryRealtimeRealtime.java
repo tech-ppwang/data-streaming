@@ -11,6 +11,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 @Component("errorsSummaryRealtime")
@@ -25,9 +26,11 @@ public class ErrorsSummaryRealtimeRealtime extends AbstractSummaryRealtime<List<
     @Override
     public List<Errors> execute(String reportId, int resourceIndex) {
         List<Errors> result = new ArrayList<>();
+        AtomicInteger sort = new AtomicInteger();
         SummaryRealtimeAction action = (resultPart) -> {
             try {
                 String reportValue = resultPart.getReportValue();
+                sort.set(resultPart.getSort());
                 List<Errors> reportContent = objectMapper.readValue(reportValue, new TypeReference<List<Errors>>() {
                 });
                 // 第一遍不需要汇总
@@ -69,10 +72,10 @@ public class ErrorsSummaryRealtimeRealtime extends AbstractSummaryRealtime<List<
                 LogUtil.error(e);
             }
         };
-        int count = selectRealtimeAndDoSummary(reportId, resourceIndex, getReportKey(), action);
+        selectRealtimeAndDoSummary(reportId, resourceIndex, getReportKey(), action);
         result.forEach(e -> {
             // 这个值有误差
-            e.setPercentOfAllSamples(format.format(new BigDecimal(e.getPercentOfAllSamples()).divide(new BigDecimal(count), 4, BigDecimal.ROUND_HALF_UP)));
+            e.setPercentOfAllSamples(format.format(new BigDecimal(e.getPercentOfAllSamples()).divide(new BigDecimal(sort.get()), 4, BigDecimal.ROUND_HALF_UP)));
         });
         return result;
     }

@@ -29,7 +29,7 @@ public abstract class AbstractSummaryRealtime<T> implements SummaryRealtime<T> {
     @Resource
     protected ObjectMapper objectMapper;
 
-    protected SummaryRealtimeAction getSumAction(List<ChartsData> result) {
+    protected SummaryRealtimeAction getMaxAction(List<ChartsData> result) {
         return (resultPart) -> {
             try {
                 String reportValue = resultPart.getReportValue();
@@ -46,8 +46,8 @@ public abstract class AbstractSummaryRealtime<T> implements SummaryRealtime<T> {
                 Map<Tuple, List<ChartsData>> collect = result.stream().collect(Collectors.groupingBy(data -> new Tuple(data.getxAxis(), data.getGroupName())));
                 List<ChartsData> summaryDataList = collect.keySet().stream().map(k -> {
                     ChartsData c = new ChartsData();
-                    BigDecimal y1Sum = collect.get(k).stream().map(ChartsData::getyAxis).reduce(new BigDecimal(0), BigDecimal::add);
-                    BigDecimal y2Sum = collect.get(k).stream().map(ChartsData::getyAxis2).reduce(new BigDecimal(0), BigDecimal::add);
+                    BigDecimal y1Sum = collect.get(k).stream().map(ChartsData::getyAxis).max(BigDecimal::compareTo).get();
+                    BigDecimal y2Sum = collect.get(k).stream().map(ChartsData::getyAxis2).max(BigDecimal::compareTo).get();
                     c.setxAxis(k.getxAxis());
                     if (y1Sum.compareTo(BigDecimal.ZERO) < 0) {
                         y1Sum = new BigDecimal(-1);
@@ -71,32 +71,29 @@ public abstract class AbstractSummaryRealtime<T> implements SummaryRealtime<T> {
         };
     }
 
-    protected int selectRealtimeAndDoSummary(String reportId, int resourceIndex, String reportKey, SummaryRealtimeAction action) {
+    protected void selectRealtimeAndDoSummary(String reportId, int resourceIndex, String reportKey, SummaryRealtimeAction action) {
         SqlSessionFactory sqlSessionFactory = CommonBeanFactory.getBean(SqlSessionFactory.class);
         MyBatisCursorItemReader<LoadTestReportResultRealtime> myBatisCursorItemReader = new MyBatisCursorItemReaderBuilder<LoadTestReportResultRealtime>()
                 .sqlSessionFactory(sqlSessionFactory)
                 // 设置queryId
                 .queryId("io.metersphere.streaming.base.mapper.ext.ExtLoadTestReportMapper.fetchTestReportRealtime")
                 .build();
-        int count = 0;
         try {
             Map<String, Object> param = new HashMap<>();
             param.put("reportId", reportId);
             param.put("reportKey", reportKey);
-            param.put("reportIndex", resourceIndex);
+            param.put("resourceIndex", resourceIndex);
             myBatisCursorItemReader.setParameterValues(param);
             myBatisCursorItemReader.open(new ExecutionContext());
             LoadTestReportResultRealtime resultRealtime;
             while ((resultRealtime = myBatisCursorItemReader.read()) != null) {
                 action.execute(resultRealtime);
-                count++;
             }
         } catch (Exception e) {
             LogUtil.error("查询分布结果失败: ", e);
         } finally {
             myBatisCursorItemReader.close();
         }
-        return count;
     }
 
     protected void handleAvgChartData(List<ChartsData> result, int count) {
@@ -113,15 +110,15 @@ public abstract class AbstractSummaryRealtime<T> implements SummaryRealtime<T> {
 
     protected List<ChartsData> handleAvgAction(String reportId, int resourceIndex) {
         List<ChartsData> result = new ArrayList<>();
-        SummaryRealtimeAction summaryAction = getSumAction(result);
-        int count = selectRealtimeAndDoSummary(reportId, resourceIndex, getReportKey(), summaryAction);
-        handleAvgChartData(result, count);
+        SummaryRealtimeAction summaryAction = getMaxAction(result);
+        selectRealtimeAndDoSummary(reportId, resourceIndex, getReportKey(), summaryAction);
+        handleAvgChartData(result, 1);
         return result;
     }
 
     protected List<ChartsData> handleSumAction(String reportId, int resourceIndex) {
         List<ChartsData> result = new ArrayList<>();
-        SummaryRealtimeAction summaryRealtimeAction = getSumAction(result);
+        SummaryRealtimeAction summaryRealtimeAction = getMaxAction(result);
         selectRealtimeAndDoSummary(reportId, resourceIndex, getReportKey(), summaryRealtimeAction);
         return result;
     }

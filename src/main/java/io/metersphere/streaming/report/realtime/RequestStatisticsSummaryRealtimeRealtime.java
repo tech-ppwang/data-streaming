@@ -12,6 +12,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 @Component("requestStatisticsSummaryRealtime")
@@ -26,9 +27,11 @@ public class RequestStatisticsSummaryRealtimeRealtime extends AbstractSummaryRea
     @Override
     public List<Statistics> execute(String reportId, int resourceIndex) {
         List<Statistics> result = new ArrayList<>();
+        AtomicInteger sort = new AtomicInteger(1);
         SummaryRealtimeAction action = (resultPart) -> {
             try {
                 String reportValue = resultPart.getReportValue();
+                sort.set(resultPart.getSort());
                 List<Statistics> reportContent = objectMapper.readValue(reportValue, new TypeReference<List<Statistics>>() {
                 });
                 // 第一遍不需要汇总
@@ -54,8 +57,8 @@ public class RequestStatisticsSummaryRealtimeRealtime extends AbstractSummaryRea
                 LogUtil.error(e);
             }
         };
-        int count = selectRealtimeAndDoSummary(reportId, resourceIndex, getReportKey(), action);
-        BigDecimal divisor = new BigDecimal(count);
+        selectRealtimeAndDoSummary(reportId, resourceIndex, getReportKey(), action);
+        BigDecimal divisor = new BigDecimal(sort.get());
         result.forEach(statistics -> {
             statistics.setError(format.format(new BigDecimal(statistics.getFail()).divide(new BigDecimal(statistics.getSamples()), 4, BigDecimal.ROUND_HALF_UP).multiply(oneHundred)));
             statistics.setAverage(format.format(new BigDecimal(statistics.getAverage()).divide(divisor, 4, BigDecimal.ROUND_HALF_UP)));
@@ -72,7 +75,7 @@ public class RequestStatisticsSummaryRealtimeRealtime extends AbstractSummaryRea
         return result;
     }
 
-    private Statistics getStatistics(String k, List<Statistics> errorsList) {
+    private Statistics getStatistics(String k, List<Statistics> statisticsList) {
         BigDecimal samples = BigDecimal.ZERO;
         BigDecimal fail = BigDecimal.ZERO;
         BigDecimal error = BigDecimal.ZERO;
@@ -86,7 +89,7 @@ public class RequestStatisticsSummaryRealtimeRealtime extends AbstractSummaryRea
         BigDecimal trans = BigDecimal.ZERO;
         BigDecimal received = BigDecimal.ZERO;
         BigDecimal sent = BigDecimal.ZERO;
-        for (Statistics statistics : errorsList) {
+        for (Statistics statistics : statisticsList) {
             samples = samples.add(new BigDecimal(statistics.getSamples()));
             fail = fail.add(new BigDecimal(statistics.getFail()));
             error = error.add(new BigDecimal(statistics.getError()));
@@ -102,9 +105,9 @@ public class RequestStatisticsSummaryRealtimeRealtime extends AbstractSummaryRea
             tp90 = tp90.add(new BigDecimal(statistics.getTp90()));
             tp95 = tp95.add(new BigDecimal(statistics.getTp95()));
             tp99 = tp99.add(new BigDecimal(statistics.getTp99()));
-            trans = trans.add(new BigDecimal(statistics.getTransactions()));
-            received = received.add(new BigDecimal(statistics.getReceived()));
-            sent = sent.add(new BigDecimal(statistics.getSent()));
+            trans = trans.max(new BigDecimal(statistics.getTransactions()));
+            received = received.max(new BigDecimal(statistics.getReceived()));
+            sent = sent.max(new BigDecimal(statistics.getSent()));
 
         }
 

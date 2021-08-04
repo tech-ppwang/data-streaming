@@ -198,6 +198,7 @@ public class TestResultSaveService {
         }
         try {
             countDownLatch.await();
+            saveAllSummary(reportId, reportKeys);
         } catch (Exception e) {
             LogUtil.error(e);
         }
