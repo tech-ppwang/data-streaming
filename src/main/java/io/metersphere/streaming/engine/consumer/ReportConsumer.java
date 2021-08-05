@@ -47,9 +47,8 @@ public class ReportConsumer {
         String reportId = reportResult.getReportId();
         int resourceIndex = reportResult.getResourceIndex();
         if (BooleanUtils.toBoolean(reportResult.getCompleted())) {
-            CallbackAction action = () -> testResultService.completeReport(reportId);
             // 最后汇总所有的信息
-            Runnable task = getTask(content, reportId, action);
+            Runnable task = getCompletedTask(content, reportId, resourceIndex);
             executor.submit(task);
             return;
         }
@@ -103,7 +102,7 @@ public class ReportConsumer {
         };
     }
 
-    private Runnable getTask(List<ReportResult> content, String reportId, CallbackAction action) {
+    private Runnable getCompletedTask(List<ReportResult> content, String reportId, Integer resourceIndex) {
         return () -> {
             boolean b = testResultSaveService.checkReportStatus(reportId);
             if (!b) {
@@ -133,16 +132,14 @@ public class ReportConsumer {
                     countDownLatch.countDown();
                 }
             }));
+            testResultSaveService.saveReportPartReportingStatus(reportId, resourceIndex);
             try {
                 countDownLatch.await();
                 long summaryStart = System.currentTimeMillis();
                 LogUtil.debug("报告: " + reportId + ", 保存耗时: " + (summaryStart - start));
                 // 汇总信息
-                testResultSaveService.saveAllSummary(reportId, reportKeys);
-                if (action != null) {
-                    testResultSaveService.forceSaveAllSummary(reportId, reportKeys);
-                    action.execute();
-                }
+                testResultSaveService.forceSaveAllSummary(reportId, reportKeys);
+                testResultService.completeReport(reportId);
                 LogUtil.debug("报告: " + reportId + ", 汇总耗时: " + (System.currentTimeMillis() - summaryStart));
             } catch (InterruptedException e) {
                 LogUtil.error(e);

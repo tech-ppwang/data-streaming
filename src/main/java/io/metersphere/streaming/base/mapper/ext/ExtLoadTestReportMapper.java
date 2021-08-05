@@ -50,4 +50,18 @@ public interface ExtLoadTestReportMapper {
     List<LoadTestReportResultRealtime> fetchTestReportRealtime(@Param("reportId") String reportId,
                                                                @Param("reportKey") String reportKey,
                                                                @Param("resourceIndex") String resourceIndex);
+
+    @Select({
+            "SELECT 1 ",
+            "FROM ( ",
+            "SELECT COUNT(1) AS completed_num ",
+            "FROM load_test_report_result_part ",
+            "WHERE report_id = #{reportId} AND report_key = 'ResultStatus' AND report_value = 'Reporting') ",
+            "AS t1, ",
+            "(SELECT COUNT(DISTINCT resource_index) AS resource_num ",
+            "FROM load_test_report_result_part ",
+            "WHERE report_id = #{reportId}) AS t2 ",
+            "WHERE t1.completed_num = t2.resource_num "
+    })
+    boolean checkReportPartStatus(@Param("reportId") String reportId);
 }

@@ -11,7 +11,6 @@ import io.metersphere.streaming.base.mapper.LoadTestReportResultMapper;
 import io.metersphere.streaming.base.mapper.ext.ExtLoadTestMapper;
 import io.metersphere.streaming.base.mapper.ext.ExtLoadTestReportMapper;
 import io.metersphere.streaming.commons.constants.GranularityData;
-import io.metersphere.streaming.commons.constants.ReportKeys;
 import io.metersphere.streaming.commons.constants.TestStatus;
 import io.metersphere.streaming.commons.utils.CommonBeanFactory;
 import io.metersphere.streaming.commons.utils.CompressUtils;
@@ -22,8 +21,6 @@ import io.metersphere.streaming.model.AdvancedConfig;
 import io.metersphere.streaming.model.Metric;
 import io.metersphere.streaming.model.PressureConfig;
 import io.metersphere.streaming.report.ReportGeneratorFactory;
-import io.metersphere.streaming.report.base.ReportTimeInfo;
-import io.metersphere.streaming.report.base.TestOverview;
 import io.metersphere.streaming.report.impl.AbstractReport;
 import io.metersphere.streaming.report.parse.ResultDataParse;
 import org.apache.commons.io.FileUtils;
@@ -164,6 +161,11 @@ public class TestResultService {
         LoadTestReportWithBLOBs report = loadTestReportMapper.selectByPrimaryKey(reportId);
         if (report == null) {
             LogUtil.info("Report is null.");
+            return;
+        }
+        LogUtil.info("等待所有的节点都结束 {}", reportId);
+        // 检查所有的节点状态, 结果为 true 表示所有的节点都结束了
+        if (!extLoadTestReportMapper.checkReportPartStatus(reportId)) {
             return;
         }
 

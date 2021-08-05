@@ -68,6 +68,15 @@ public class TestResultSaveService {
         extLoadTestReportResultMapper.updateReportStatus(reportId, ReportKeys.ResultStatus.name(), "Reporting", "Ready");
     }
 
+    public void saveReportPartReportingStatus(String reportId, int resourceIndex) {
+        LoadTestReportResultPart testResult = new LoadTestReportResultPart();
+        testResult.setReportId(reportId);
+        testResult.setReportKey(ReportKeys.ResultStatus.name());
+        testResult.setResourceIndex(resourceIndex);
+        testResult.setReportValue(TestStatus.Reporting.name());
+        saveResultPart(testResult);
+    }
+
     public void saveReportCompletedStatus(String reportId) {
         // 保存最终 为 completed
         extLoadTestReportResultMapper.updateReportStatus(reportId, ReportKeys.ResultStatus.name(), "Reporting", "Completed");
