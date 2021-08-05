@@ -16,7 +16,7 @@ public class TransactionsChartSummaryRealtimeRealtime extends AbstractSummaryRea
 
     @Override
     public List<ChartsData> execute(String reportId, int resourceIndex) {
-        return handleSumAction(reportId, resourceIndex);
+        return handleMaxAction(reportId, resourceIndex);
     }
 
 }

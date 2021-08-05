@@ -116,7 +116,7 @@ public abstract class AbstractSummaryRealtime<T> implements SummaryRealtime<T> {
         return result;
     }
 
-    protected List<ChartsData> handleSumAction(String reportId, int resourceIndex) {
+    protected List<ChartsData> handleMaxAction(String reportId, int resourceIndex) {
         List<ChartsData> result = new ArrayList<>();
         SummaryRealtimeAction summaryRealtimeAction = getMaxAction(result);
         selectRealtimeAndDoSummary(reportId, resourceIndex, getReportKey(), summaryRealtimeAction);
