@@ -21,9 +21,9 @@ public class OverviewSummaryRealtimeRealtime extends AbstractSummaryRealtime<Tes
     @Override
     public TestOverview execute(String reportId, int resourceIndex) {
         AtomicReference<TestOverview> result = new AtomicReference<>();
-        SummaryRealtimeAction action = (resultPart) -> {
+        SummaryRealtimeAction action = (resultRealtime) -> {
             try {
-                String reportValue = resultPart.getReportValue();
+                String reportValue = resultRealtime.getReportValue();
                 TestOverview reportContent = objectMapper.readValue(reportValue, TestOverview.class);
                 // 第一遍不需要汇总
                 if (result.get() == null) {
@@ -64,14 +64,14 @@ public class OverviewSummaryRealtimeRealtime extends AbstractSummaryRealtime<Tes
             }
         };
         selectRealtimeAndDoSummary(reportId, resourceIndex, getReportKey(), action);
-        BigDecimal divisor = new BigDecimal(1);
+//        BigDecimal divisor = new BigDecimal(1);
 
         TestOverview testOverview = result.get();
 
 
-        testOverview.setErrors(format4.format(new BigDecimal(testOverview.getErrors()).divide(divisor, 4, BigDecimal.ROUND_HALF_UP)));
-        testOverview.setResponseTime90(format4.format(new BigDecimal(testOverview.getResponseTime90()).divide(divisor, 4, BigDecimal.ROUND_HALF_UP)));
-        testOverview.setAvgResponseTime(format4.format(new BigDecimal(testOverview.getAvgResponseTime()).divide(divisor, 4, BigDecimal.ROUND_HALF_UP)));
+//        testOverview.setErrors(format4.format(new BigDecimal(testOverview.getErrors()).divide(divisor, 4, BigDecimal.ROUND_HALF_UP)));
+//        testOverview.setResponseTime90(format4.format(new BigDecimal(testOverview.getResponseTime90()).divide(divisor, 4, BigDecimal.ROUND_HALF_UP)));
+//        testOverview.setAvgResponseTime(format4.format(new BigDecimal(testOverview.getAvgResponseTime()).divide(divisor, 4, BigDecimal.ROUND_HALF_UP)));
 
         return testOverview;
     }
