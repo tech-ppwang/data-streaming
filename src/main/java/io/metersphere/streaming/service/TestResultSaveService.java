@@ -89,7 +89,7 @@ public class TestResultSaveService {
         }
     }
 
-    private void saveSummary(String reportId, String reportKey) {
+    public void saveSummary(String reportId, String reportKey) {
         try {
             Object summary = SummaryFactory.getSummaryExecutor(reportKey).execute(reportId);
             LoadTestReportResult record = new LoadTestReportResult();

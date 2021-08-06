@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 @Component("overviewSummaryRealtime")
@@ -21,10 +22,12 @@ public class OverviewSummaryRealtimeRealtime extends AbstractSummaryRealtime<Tes
     @Override
     public TestOverview execute(String reportId, int resourceIndex) {
         AtomicReference<TestOverview> result = new AtomicReference<>();
+        AtomicInteger count = new AtomicInteger(0);
         SummaryRealtimeAction action = (resultRealtime) -> {
             try {
                 String reportValue = resultRealtime.getReportValue();
                 TestOverview reportContent = objectMapper.readValue(reportValue, TestOverview.class);
+                count.getAndIncrement();
                 // 第一遍不需要汇总
                 if (result.get() == null) {
                     result.set(reportContent);
@@ -37,25 +40,11 @@ public class OverviewSummaryRealtimeRealtime extends AbstractSummaryRealtime<Tes
                 BigDecimal bigDecimal1 = new BigDecimal(reportContent.getMaxUsers());
                 testOverview.setMaxUsers(bigDecimal1.max(bigDecimal2).toString());
 
-                BigDecimal bigDecimal3 = new BigDecimal(reportContent.getAvgTransactions());
-                BigDecimal bigDecimal4 = new BigDecimal(testOverview.getAvgTransactions());
-                testOverview.setAvgTransactions(bigDecimal3.max(bigDecimal4).toString());
-
-                BigDecimal bigDecimal5 = new BigDecimal(reportContent.getAvgBandwidth());
-                BigDecimal bigDecimal6 = new BigDecimal(testOverview.getAvgBandwidth());
-                testOverview.setAvgBandwidth(bigDecimal5.max(bigDecimal6).toString());
-
-                BigDecimal bigDecimal7 = new BigDecimal(reportContent.getErrors());
-                BigDecimal bigDecimal8 = new BigDecimal(testOverview.getErrors());
-                testOverview.setErrors(bigDecimal7.max(bigDecimal8).toString());
-
-                BigDecimal bigDecimal9 = new BigDecimal(reportContent.getResponseTime90());
-                BigDecimal bigDecimal10 = new BigDecimal(testOverview.getResponseTime90());
-                testOverview.setResponseTime90(bigDecimal9.max(bigDecimal10).toString());
-
-                BigDecimal bigDecimal11 = new BigDecimal(reportContent.getAvgResponseTime());
-                BigDecimal bigDecimal12 = new BigDecimal(testOverview.getAvgResponseTime());
-                testOverview.setAvgResponseTime(bigDecimal11.max(bigDecimal12).toString());
+                testOverview.setAvgTransactions(new BigDecimal(testOverview.getAvgTransactions()).add(new BigDecimal(reportContent.getAvgTransactions())).toString());
+                testOverview.setAvgBandwidth(new BigDecimal(testOverview.getAvgBandwidth()).add(new BigDecimal(reportContent.getAvgBandwidth())).toString());
+                testOverview.setErrors(new BigDecimal(testOverview.getErrors()).add(new BigDecimal(reportContent.getErrors())).toString());
+                testOverview.setResponseTime90(new BigDecimal(testOverview.getResponseTime90()).add(new BigDecimal(reportContent.getResponseTime90())).toString());
+                testOverview.setAvgResponseTime(new BigDecimal(testOverview.getAvgResponseTime()).add(new BigDecimal(reportContent.getAvgResponseTime())).toString());
 
                 result.set(testOverview);
 
@@ -64,14 +53,15 @@ public class OverviewSummaryRealtimeRealtime extends AbstractSummaryRealtime<Tes
             }
         };
         selectRealtimeAndDoSummary(reportId, resourceIndex, getReportKey(), action);
-//        BigDecimal divisor = new BigDecimal(1);
 
+        BigDecimal divisor = new BigDecimal(count.get());
         TestOverview testOverview = result.get();
 
-
-//        testOverview.setErrors(format4.format(new BigDecimal(testOverview.getErrors()).divide(divisor, 4, BigDecimal.ROUND_HALF_UP)));
-//        testOverview.setResponseTime90(format4.format(new BigDecimal(testOverview.getResponseTime90()).divide(divisor, 4, BigDecimal.ROUND_HALF_UP)));
-//        testOverview.setAvgResponseTime(format4.format(new BigDecimal(testOverview.getAvgResponseTime()).divide(divisor, 4, BigDecimal.ROUND_HALF_UP)));
+        testOverview.setAvgTransactions(format4.format(new BigDecimal(testOverview.getAvgTransactions()).divide(divisor, 4, BigDecimal.ROUND_HALF_UP)));
+        testOverview.setErrors(format4.format(new BigDecimal(testOverview.getErrors()).divide(divisor, 4, BigDecimal.ROUND_HALF_UP)));
+        testOverview.setAvgBandwidth(format4.format(new BigDecimal(testOverview.getAvgBandwidth()).divide(divisor, 4, BigDecimal.ROUND_HALF_UP)));
+        testOverview.setResponseTime90(format4.format(new BigDecimal(testOverview.getResponseTime90()).divide(divisor, 4, BigDecimal.ROUND_HALF_UP)));
+        testOverview.setAvgResponseTime(format4.format(new BigDecimal(testOverview.getAvgResponseTime()).divide(divisor, 4, BigDecimal.ROUND_HALF_UP)));
 
         return testOverview;
     }
