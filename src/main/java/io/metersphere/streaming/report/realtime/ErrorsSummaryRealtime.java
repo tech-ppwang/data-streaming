@@ -69,7 +69,7 @@ public class ErrorsSummaryRealtime extends AbstractSummaryRealtime<List<Errors>>
                 result.addAll(summaryDataList);
                 // 返回
             } catch (Exception e) {
-                LogUtil.error("ErrorsSummaryRealtimeRealtime: ", e);
+                LogUtil.error("ErrorsSummaryRealtime: ", e);
             }
         };
         selectRealtimeAndDoSummary(reportId, resourceIndex, getReportKey(), action);

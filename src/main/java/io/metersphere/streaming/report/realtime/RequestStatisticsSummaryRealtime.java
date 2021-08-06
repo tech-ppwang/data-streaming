@@ -58,7 +58,7 @@ public class RequestStatisticsSummaryRealtime extends AbstractSummaryRealtime<Li
                 // 按照原始顺序重新排序
                 result.sort(Comparator.comparingInt(a -> orderList.indexOf(a.getLabel())));
             } catch (Exception e) {
-                LogUtil.error("RequestStatisticsSummaryRealtimeRealtime: ", e);
+                LogUtil.error("RequestStatisticsSummaryRealtime: ", e);
             }
         };
         selectRealtimeAndDoSummary(reportId, resourceIndex, getReportKey(), action);

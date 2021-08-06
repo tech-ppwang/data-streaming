@@ -50,7 +50,7 @@ public class OverviewSummaryRealtime extends AbstractSummaryRealtime<TestOvervie
                 result.set(testOverview);
 
             } catch (Exception e) {
-                LogUtil.error("OverviewSummaryRealtimeRealtime:", e);
+                LogUtil.error("OverviewSummaryRealtime:", e);
             }
         };
         selectRealtimeAndDoSummary(reportId, resourceIndex, getReportKey(), action);

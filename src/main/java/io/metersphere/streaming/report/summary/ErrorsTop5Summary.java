@@ -10,10 +10,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Component("errorsTop5Summary")
@@ -29,7 +26,7 @@ public class ErrorsTop5Summary extends AbstractSummary<List<ErrorsTop5>> {
     @Override
     public List<ErrorsTop5> execute(String reportId) {
         List<ErrorsTop5> result = new ArrayList<>();
-        List<ErrorCount> errorCounts = new ArrayList<>();
+        Map<String, List<ErrorCount>> sampleErrorCounts = new HashMap<>();
 
         SummaryAction action = (resultPart) -> {
             try {
@@ -46,6 +43,8 @@ public class ErrorsTop5Summary extends AbstractSummary<List<ErrorsTop5>> {
 
                 Map<String, List<ErrorsTop5>> collect = result.stream().collect(Collectors.groupingBy(ErrorsTop5::getSample));
                 List<ErrorsTop5> summaryDataList = collect.keySet().stream().map(sample -> {
+                    sampleErrorCounts.put(sample, new ArrayList<>());
+                    List<ErrorCount> errorCounts = sampleErrorCounts.get(sample);
 
                     List<ErrorsTop5> errorsList = collect.get(sample);
                     BigDecimal samples = errorsList.stream().map(e -> new BigDecimal(e.getSamples())).reduce(BigDecimal::add).get();
