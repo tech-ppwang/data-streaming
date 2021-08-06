@@ -33,7 +33,7 @@ public class RequestStatisticsSummary extends AbstractSummary<List<Statistics>> 
                 List<Statistics> reportContent = objectMapper.readValue(reportValue, new TypeReference<List<Statistics>>() {
                 });
                 // 保存顺序
-                List<String> orderList = reportContent.stream().map(s -> s.getLabel()).collect(Collectors.toList());
+                List<String> orderList = reportContent.stream().map(Statistics::getLabel).collect(Collectors.toList());
                 // 第一遍不需要汇总
                 if (CollectionUtils.isEmpty(result)) {
                     result.addAll(reportContent);

@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -34,6 +35,8 @@ public class RequestStatisticsSummaryRealtimeRealtime extends AbstractSummaryRea
                 sort.set(resultPart.getSort());
                 List<Statistics> reportContent = objectMapper.readValue(reportValue, new TypeReference<List<Statistics>>() {
                 });
+                // 保存顺序
+                List<String> orderList = reportContent.stream().map(Statistics::getLabel).collect(Collectors.toList());
                 // 第一遍不需要汇总
                 if (CollectionUtils.isEmpty(result)) {
                     result.addAll(reportContent);
@@ -52,7 +55,8 @@ public class RequestStatisticsSummaryRealtimeRealtime extends AbstractSummaryRea
                 result.clear();
                 // 保留前几次的结果
                 result.addAll(summaryDataList);
-                // 返回
+                // 按照原始顺序重新排序
+                result.sort(Comparator.comparingInt(a -> orderList.indexOf(a.getLabel())));
             } catch (Exception e) {
                 LogUtil.error("RequestStatisticsSummaryRealtimeRealtime: ", e);
             }
