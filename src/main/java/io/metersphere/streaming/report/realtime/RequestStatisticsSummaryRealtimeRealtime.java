@@ -66,6 +66,9 @@ public class RequestStatisticsSummaryRealtimeRealtime extends AbstractSummaryRea
             statistics.setTp90(format.format(new BigDecimal(statistics.getTp90()).divide(divisor, 4, BigDecimal.ROUND_HALF_UP)));
             statistics.setTp95(format.format(new BigDecimal(statistics.getTp95()).divide(divisor, 4, BigDecimal.ROUND_HALF_UP)));
             statistics.setTp99(format.format(new BigDecimal(statistics.getTp99()).divide(divisor, 4, BigDecimal.ROUND_HALF_UP)));
+            statistics.setTransactions(format.format(new BigDecimal(statistics.getTransactions()).divide(divisor, 4, BigDecimal.ROUND_HALF_UP)));
+            statistics.setReceived(format.format(new BigDecimal(statistics.getReceived()).divide(divisor, 4, BigDecimal.ROUND_HALF_UP)));
+            statistics.setSent(format.format(new BigDecimal(statistics.getSent()).divide(divisor, 4, BigDecimal.ROUND_HALF_UP)));
         });
 
         // 把 total 放到最后
@@ -105,9 +108,9 @@ public class RequestStatisticsSummaryRealtimeRealtime extends AbstractSummaryRea
             tp90 = tp90.add(new BigDecimal(statistics.getTp90()));
             tp95 = tp95.add(new BigDecimal(statistics.getTp95()));
             tp99 = tp99.add(new BigDecimal(statistics.getTp99()));
-            trans = trans.max(new BigDecimal(statistics.getTransactions()));
-            received = received.max(new BigDecimal(statistics.getReceived()));
-            sent = sent.max(new BigDecimal(statistics.getSent()));
+            trans = trans.add(new BigDecimal(statistics.getTransactions()));
+            received = received.add(new BigDecimal(statistics.getReceived()));
+            sent = sent.add(new BigDecimal(statistics.getSent()));
 
         }
 
