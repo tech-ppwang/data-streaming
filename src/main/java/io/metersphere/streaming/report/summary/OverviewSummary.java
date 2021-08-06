@@ -12,6 +12,7 @@ import java.util.concurrent.atomic.AtomicReference;
 @Component("overviewSummary")
 public class OverviewSummary extends AbstractSummary<TestOverview> {
     private final DecimalFormat format4 = new DecimalFormat("0.0000");
+    private final DecimalFormat format2 = new DecimalFormat("0.00");
 
     @Override
     public String getReportKey() {
@@ -53,7 +54,7 @@ public class OverviewSummary extends AbstractSummary<TestOverview> {
         TestOverview testOverview = result.get();
 
 
-        testOverview.setErrors(format4.format(new BigDecimal(testOverview.getErrors()).divide(divisor, 4, BigDecimal.ROUND_HALF_UP)));
+        testOverview.setErrors(format2.format(new BigDecimal(testOverview.getErrors()).divide(divisor, 4, BigDecimal.ROUND_HALF_UP)));
         testOverview.setResponseTime90(format4.format(new BigDecimal(testOverview.getResponseTime90()).divide(divisor, 4, BigDecimal.ROUND_HALF_UP)));
         testOverview.setAvgResponseTime(format4.format(new BigDecimal(testOverview.getAvgResponseTime()).divide(divisor, 4, BigDecimal.ROUND_HALF_UP)));
 
