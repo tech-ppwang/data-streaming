@@ -22,12 +22,12 @@ public class OverviewSummaryRealtimeRealtime extends AbstractSummaryRealtime<Tes
     @Override
     public TestOverview execute(String reportId, int resourceIndex) {
         AtomicReference<TestOverview> result = new AtomicReference<>();
-        AtomicInteger count = new AtomicInteger(0);
+        AtomicInteger sort = new AtomicInteger(1);
         SummaryRealtimeAction action = (resultRealtime) -> {
             try {
                 String reportValue = resultRealtime.getReportValue();
                 TestOverview reportContent = objectMapper.readValue(reportValue, TestOverview.class);
-                count.getAndIncrement();
+                sort.set(resultRealtime.getSort());
                 // 第一遍不需要汇总
                 if (result.get() == null) {
                     result.set(reportContent);
@@ -54,7 +54,7 @@ public class OverviewSummaryRealtimeRealtime extends AbstractSummaryRealtime<Tes
         };
         selectRealtimeAndDoSummary(reportId, resourceIndex, getReportKey(), action);
 
-        BigDecimal divisor = new BigDecimal(count.get());
+        BigDecimal divisor = new BigDecimal(sort.get());
         TestOverview testOverview = result.get();
 
         testOverview.setAvgTransactions(format4.format(new BigDecimal(testOverview.getAvgTransactions()).divide(divisor, 4, BigDecimal.ROUND_HALF_UP)));
