@@ -17,7 +17,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 @Component("requestStatisticsSummaryRealtime")
-public class RequestStatisticsSummaryRealtimeRealtime extends AbstractSummaryRealtime<List<Statistics>> {
+public class RequestStatisticsSummaryRealtime extends AbstractSummaryRealtime<List<Statistics>> {
     private final BigDecimal oneHundred = new BigDecimal(100);
 
     @Override

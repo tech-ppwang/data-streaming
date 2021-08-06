@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -44,9 +45,9 @@ public class ErrorsTop5Summary extends AbstractSummary<List<ErrorsTop5>> {
                 result.addAll(reportContent);
 
                 Map<String, List<ErrorsTop5>> collect = result.stream().collect(Collectors.groupingBy(ErrorsTop5::getSample));
-                List<ErrorsTop5> summaryDataList = collect.keySet().stream().map(k -> {
+                List<ErrorsTop5> summaryDataList = collect.keySet().stream().map(sample -> {
 
-                    List<ErrorsTop5> errorsList = collect.get(k);
+                    List<ErrorsTop5> errorsList = collect.get(sample);
                     BigDecimal samples = errorsList.stream().map(e -> new BigDecimal(e.getSamples())).reduce(BigDecimal::add).get();
                     BigDecimal errorsAllSize = errorsList.stream().map(e -> new BigDecimal(e.getErrorsAllSize())).reduce(BigDecimal::add).get();
                     errorsList.forEach(e -> {
@@ -62,21 +63,23 @@ public class ErrorsTop5Summary extends AbstractSummary<List<ErrorsTop5>> {
                             .filter(e -> StringUtils.isNotBlank(e.error))
                             .collect(Collectors.groupingBy(e -> e.error));
 
-                    List<ErrorCount> sorted = collect1
-                            .keySet().stream()
+                    List<ErrorsTop5Summary.ErrorCount> sorted = collect1
+                            .keySet()
+                            .stream()
                             .map(ek -> {
-                                Integer sum = collect1.get(ek).stream().map(a -> Integer.parseInt(a.count)).reduce(Integer::sum).get();
-                                return new ErrorCount(ek, sum.toString());
+                                Long sum = collect1.get(ek).stream().map(a -> Long.parseLong(a.count)).reduce(Long::sum).get();
+                                return new ErrorsTop5Summary.ErrorCount(ek, sum.toString());
                             })
-                            .sorted((a, b) -> Integer.parseInt(b.count) - Integer.parseInt(a.count))
+                            .sorted(Comparator.comparing(a -> Long.parseLong(a.count), Comparator.reverseOrder()))
                             .collect(Collectors.toList());
+
 
                     // 保存新的排序
                     errorCounts.clear();
                     errorCounts.addAll(sorted);
 
                     ErrorsTop5 c = new ErrorsTop5();
-                    c.setSample(k);
+                    c.setSample(sample);
                     c.setSamples(samples.toString());
                     c.setErrorsAllSize(errorsAllSize.toString());
                     if (errorCounts.size() > 0) {

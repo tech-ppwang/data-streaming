@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 
 @Component("responseCodeChartSummaryRealtime")
-public class ResponseCodeChartSummaryRealtimeRealtime extends AbstractSummaryRealtime<List<ChartsData>> {
+public class ResponseCodeChartSummaryRealtime extends AbstractSummaryRealtime<List<ChartsData>> {
 
     @Override
     public String getReportKey() {

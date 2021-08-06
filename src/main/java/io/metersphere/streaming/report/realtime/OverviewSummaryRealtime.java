@@ -11,7 +11,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 @Component("overviewSummaryRealtime")
-public class OverviewSummaryRealtimeRealtime extends AbstractSummaryRealtime<TestOverview> {
+public class OverviewSummaryRealtime extends AbstractSummaryRealtime<TestOverview> {
     private final DecimalFormat format4 = new DecimalFormat("0.0000");
     private final DecimalFormat format2 = new DecimalFormat("0.00");
 

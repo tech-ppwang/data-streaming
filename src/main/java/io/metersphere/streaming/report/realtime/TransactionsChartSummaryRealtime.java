@@ -6,12 +6,12 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 
-@Component("totalTransactionsChartSummaryRealtime")
-public class TotalTransactionsChartSummaryRealtimeRealtime extends AbstractSummaryRealtime<List<ChartsData>> {
+@Component("transactionsChartSummaryRealtime")
+public class TransactionsChartSummaryRealtime extends AbstractSummaryRealtime<List<ChartsData>> {
 
     @Override
     public String getReportKey() {
-        return ReportKeys.TotalTransactionsChart.name();
+        return ReportKeys.TransactionsChart.name();
     }
 
     @Override

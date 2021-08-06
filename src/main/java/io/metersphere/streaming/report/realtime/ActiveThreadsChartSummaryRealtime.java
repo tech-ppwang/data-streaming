@@ -6,18 +6,17 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 
-@Component("errorsChartSummaryRealtime")
-public class ErrorsChartSummaryRealtimeRealtime extends AbstractSummaryRealtime<List<ChartsData>> {
+@Component("activeThreadsChartSummaryRealtime")
+public class ActiveThreadsChartSummaryRealtime extends AbstractSummaryRealtime<List<ChartsData>> {
 
     @Override
     public String getReportKey() {
-        return ReportKeys.ErrorsChart.name();
+        return ReportKeys.ActiveThreadsChart.name();
     }
 
     @Override
     public List<ChartsData> execute(String reportId, int resourceIndex) {
         return handleMaxAction(reportId, resourceIndex);
     }
-
 
 }

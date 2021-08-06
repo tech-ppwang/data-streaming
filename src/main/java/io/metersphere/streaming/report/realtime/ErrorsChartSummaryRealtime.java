@@ -6,12 +6,12 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 
-@Component("bytesThroughputChartSummaryRealtime")
-public class BytesThroughputChartSummaryRealtimeRealtime extends AbstractSummaryRealtime<List<ChartsData>> {
+@Component("errorsChartSummaryRealtime")
+public class ErrorsChartSummaryRealtime extends AbstractSummaryRealtime<List<ChartsData>> {
 
     @Override
     public String getReportKey() {
-        return ReportKeys.BytesThroughputChart.name();
+        return ReportKeys.ErrorsChart.name();
     }
 
     @Override

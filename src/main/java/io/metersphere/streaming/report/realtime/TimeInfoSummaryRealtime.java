@@ -10,7 +10,7 @@ import java.time.Instant;
 import java.util.concurrent.atomic.AtomicReference;
 
 @Component("timeInfoSummaryRealtime")
-public class TimeInfoSummaryRealtimeRealtime extends AbstractSummaryRealtime<ReportTimeInfo> {
+public class TimeInfoSummaryRealtime extends AbstractSummaryRealtime<ReportTimeInfo> {
 
     @Override
     public String getReportKey() {
