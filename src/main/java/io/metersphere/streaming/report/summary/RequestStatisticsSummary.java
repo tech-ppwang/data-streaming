@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -31,6 +32,8 @@ public class RequestStatisticsSummary extends AbstractSummary<List<Statistics>> 
                 String reportValue = resultPart.getReportValue();
                 List<Statistics> reportContent = objectMapper.readValue(reportValue, new TypeReference<List<Statistics>>() {
                 });
+                // 保存顺序
+                List<String> orderList = reportContent.stream().map(s -> s.getLabel()).collect(Collectors.toList());
                 // 第一遍不需要汇总
                 if (CollectionUtils.isEmpty(result)) {
                     result.addAll(reportContent);
@@ -49,7 +52,8 @@ public class RequestStatisticsSummary extends AbstractSummary<List<Statistics>> 
                 result.clear();
                 // 保留前几次的结果
                 result.addAll(summaryDataList);
-                // 返回
+                // 按照原始顺序重新排序
+                result.sort(Comparator.comparingInt(a -> orderList.indexOf(a.getLabel())));
             } catch (Exception e) {
                 LogUtil.error("RequestStatisticsSummary: ", e);
             }
@@ -65,10 +69,6 @@ public class RequestStatisticsSummary extends AbstractSummary<List<Statistics>> 
             statistics.setTp99(format.format(new BigDecimal(statistics.getTp99()).divide(divisor, 4, BigDecimal.ROUND_HALF_UP)));
         });
 
-        // 把 total 放到最后
-        List<Statistics> total = result.stream().filter(r -> StringUtils.equalsAnyIgnoreCase(r.getLabel(), "Total")).collect(Collectors.toList());
-        result.removeAll(total);
-        result.addAll(total);
         return result;
     }
 
