@@ -18,6 +18,7 @@ import io.metersphere.streaming.report.base.TestOverview;
 import io.metersphere.streaming.report.realtime.SummaryRealtimeFactory;
 import io.metersphere.streaming.report.summary.SummaryFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
@@ -146,6 +147,7 @@ public class TestResultSaveService {
         return true;
     }
 
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public void saveReportOverview(String reportId) {
         LoadTestReportResultExample example1 = new LoadTestReportResultExample();
         example1.createCriteria().andReportIdEqualTo(reportId).andReportKeyEqualTo(ReportKeys.Overview.name());
@@ -167,6 +169,7 @@ public class TestResultSaveService {
         }
     }
 
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public void saveReportTimeInfo(String reportId) {
         LoadTestReportResultExample example1 = new LoadTestReportResultExample();
         example1.createCriteria().andReportIdEqualTo(reportId).andReportKeyEqualTo(ReportKeys.TimeInfo.name());
