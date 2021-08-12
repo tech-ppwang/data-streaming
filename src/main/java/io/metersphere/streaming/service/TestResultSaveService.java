@@ -104,6 +104,7 @@ public class TestResultSaveService {
         }
     }
 
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public void forceSaveAllSummary(String reportId, List<String> reportKeys) {
         CountDownLatch countDownLatch = new CountDownLatch(reportKeys.size());
         for (String key : reportKeys) {
@@ -147,7 +148,6 @@ public class TestResultSaveService {
         return true;
     }
 
-    @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public void saveReportOverview(String reportId) {
         LoadTestReportResultExample example1 = new LoadTestReportResultExample();
         example1.createCriteria().andReportIdEqualTo(reportId).andReportKeyEqualTo(ReportKeys.Overview.name());
@@ -169,7 +169,6 @@ public class TestResultSaveService {
         }
     }
 
-    @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public void saveReportTimeInfo(String reportId) {
         LoadTestReportResultExample example1 = new LoadTestReportResultExample();
         example1.createCriteria().andReportIdEqualTo(reportId).andReportKeyEqualTo(ReportKeys.TimeInfo.name());
@@ -195,6 +194,7 @@ public class TestResultSaveService {
         loadTestReportResultRealtimeMapper.insert(testResult);
     }
 
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public void saveAllSummaryRealtime(String reportId, Integer resourceIndex, List<String> reportKeys) {
         CountDownLatch countDownLatch = new CountDownLatch(reportKeys.size());
         for (String key : reportKeys) {
@@ -216,7 +216,7 @@ public class TestResultSaveService {
         }
     }
 
-    private void saveSummaryRealtime(String reportId, String reportKey, Integer resourceIndex) {
+    public void saveSummaryRealtime(String reportId, String reportKey, Integer resourceIndex) {
         try {
             Object summary = SummaryRealtimeFactory.getSummaryExecutor(reportKey).execute(reportId, resourceIndex);
             LoadTestReportResultPart record = new LoadTestReportResultPart();
