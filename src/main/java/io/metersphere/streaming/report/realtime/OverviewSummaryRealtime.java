@@ -7,7 +7,9 @@ import io.metersphere.streaming.base.mapper.LoadTestReportResultPartMapper;
 import io.metersphere.streaming.commons.constants.ReportKeys;
 import io.metersphere.streaming.commons.utils.LogUtil;
 import io.metersphere.streaming.report.base.ChartsData;
+import io.metersphere.streaming.report.base.Errors;
 import io.metersphere.streaming.report.base.TestOverview;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -55,7 +57,6 @@ public class OverviewSummaryRealtime extends AbstractSummaryRealtime<TestOvervie
                 testOverview.setMaxUsers(bigDecimal1.max(bigDecimal2).toString());
 
                 testOverview.setAvgBandwidth(new BigDecimal(testOverview.getAvgBandwidth()).add(new BigDecimal(reportContent.getAvgBandwidth())).toString());
-                testOverview.setErrors(new BigDecimal(testOverview.getErrors()).add(new BigDecimal(reportContent.getErrors())).toString());
                 testOverview.setResponseTime90(new BigDecimal(testOverview.getResponseTime90()).add(new BigDecimal(reportContent.getResponseTime90())).toString());
                 testOverview.setAvgResponseTime(new BigDecimal(testOverview.getAvgResponseTime()).add(new BigDecimal(reportContent.getAvgResponseTime())).toString());
 
@@ -70,14 +71,45 @@ public class OverviewSummaryRealtime extends AbstractSummaryRealtime<TestOvervie
         BigDecimal divisor = new BigDecimal(sort.get());
         TestOverview testOverview = result.get();
 
-        testOverview.setErrors(format2.format(new BigDecimal(testOverview.getErrors()).divide(divisor, 4, BigDecimal.ROUND_HALF_UP)));
-        testOverview.setAvgBandwidth(format2.format(new BigDecimal(testOverview.getAvgBandwidth()).divide(divisor, 4, BigDecimal.ROUND_HALF_UP)));
         testOverview.setResponseTime90(format4.format(new BigDecimal(testOverview.getResponseTime90()).divide(divisor, 4, BigDecimal.ROUND_HALF_UP)));
         testOverview.setAvgResponseTime(format4.format(new BigDecimal(testOverview.getAvgResponseTime()).divide(divisor, 4, BigDecimal.ROUND_HALF_UP)));
 
         testOverview.setAvgTransactions(handleAvgTransactions(reportId, resourceIndex));
+        testOverview.setErrors(handleErrors(reportId, resourceIndex));
+        testOverview.setAvgBandwidth(handleAvgBandwidth(reportId, resourceIndex));
+
 
         return testOverview;
+    }
+
+    private String handleAvgBandwidth(String reportId, int resourceIndex) {
+        LoadTestReportResultPartKey key = new LoadTestReportResultPartKey();
+        key.setReportId(reportId);
+        key.setResourceIndex(resourceIndex);
+        key.setReportKey(ReportKeys.BytesThroughputChart.name());
+        LoadTestReportResultPart loadTestReportResultPart = loadTestReportResultPartMapper.selectByPrimaryKey(key);
+        try {
+            if (loadTestReportResultPart == null) {
+                return "0";
+            }
+            List<ChartsData> chartsData = objectMapper.readValue(loadTestReportResultPart.getReportValue(), new TypeReference<List<ChartsData>>() {
+            });
+            Map<String, List<ChartsData>> collect = chartsData.stream().collect(Collectors.groupingBy(ChartsData::getxAxis));
+            BigDecimal sum = new BigDecimal(0);
+            Set<String> xAxisList = collect.keySet();
+            for (String xAxis : xAxisList) {
+                BigDecimal y1Sum = collect.get(xAxis).stream()
+                        .filter(c -> StringUtils.equalsIgnoreCase("Bytes received per second", c.getGroupName()))
+                        .map(ChartsData::getyAxis)
+                        .reduce(new BigDecimal(0), BigDecimal::add);
+                sum = sum.add(y1Sum);
+            }
+            BigDecimal avgTrans = sum.divide(new BigDecimal(xAxisList.size()), 4, BigDecimal.ROUND_HALF_UP);
+            return format2.format(avgTrans);
+        } catch (Exception e) {
+            LogUtil.error(e.getMessage(), e);
+        }
+        return "0";
     }
 
     private String handleAvgTransactions(String reportId, int resourceIndex) {
@@ -101,6 +133,27 @@ public class OverviewSummaryRealtime extends AbstractSummaryRealtime<TestOvervie
             }
             BigDecimal avgTrans = sum.divide(new BigDecimal(xAxisList.size()), 4, BigDecimal.ROUND_HALF_UP);
             return format2.format(avgTrans);
+        } catch (Exception e) {
+            LogUtil.error(e.getMessage(), e);
+        }
+        return "0";
+    }
+
+    private String handleErrors(String reportId, int resourceIndex) {
+        LoadTestReportResultPartKey key = new LoadTestReportResultPartKey();
+        key.setReportId(reportId);
+        key.setResourceIndex(resourceIndex);
+        key.setReportKey(ReportKeys.Errors.name());
+        LoadTestReportResultPart loadTestReportResultPart = loadTestReportResultPartMapper.selectByPrimaryKey(key);
+        try {
+            if (loadTestReportResultPart == null) {
+                return "0";
+            }
+            List<Errors> errorsList = objectMapper.readValue(loadTestReportResultPart.getReportValue(), new TypeReference<List<Errors>>() {
+            });
+            double eSum = errorsList.stream().mapToDouble(e -> Double.parseDouble(e.getPercentOfAllSamples())).sum();
+            BigDecimal sum = new BigDecimal(eSum);
+            return format2.format(eSum);
         } catch (Exception e) {
             LogUtil.error(e.getMessage(), e);
         }
