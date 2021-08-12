@@ -139,7 +139,7 @@ public class ReportConsumer {
                 LogUtil.debug("报告: " + reportId + ", 保存耗时: " + (summaryStart - start));
                 // 汇总信息
                 testResultSaveService.forceSaveAllSummary(reportId, reportKeys);
-                testResultService.completeReport(reportId);
+                testResultService.completeReport(reportId, resourceIndex);
                 LogUtil.debug("报告: " + reportId + ", 汇总耗时: " + (System.currentTimeMillis() - summaryStart));
             } catch (InterruptedException e) {
                 LogUtil.error(e);

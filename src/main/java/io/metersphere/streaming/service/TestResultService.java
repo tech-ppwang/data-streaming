@@ -157,13 +157,13 @@ public class TestResultService {
         completeThreadPool.schedule(() -> generateReportComplete(report.getId()), 30, TimeUnit.SECONDS);
     }
 
-    public void completeReport(String reportId) {
+    public void completeReport(String reportId, int resourceIndex) {
         LoadTestReportWithBLOBs report = loadTestReportMapper.selectByPrimaryKey(reportId);
         if (report == null) {
             LogUtil.info("Report is null.");
             return;
         }
-        LogUtil.info("等待所有的节点都结束 {}", reportId);
+        LogUtil.info("等待所有的节点都结束 {}_{}", reportId, resourceIndex);
         // 检查所有的节点状态, 结果为 true 表示所有的节点都结束了
         if (!extLoadTestReportMapper.checkReportPartStatus(reportId)) {
             return;

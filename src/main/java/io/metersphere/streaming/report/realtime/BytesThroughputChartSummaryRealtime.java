@@ -16,7 +16,7 @@ public class BytesThroughputChartSummaryRealtime extends AbstractSummaryRealtime
 
     @Override
     public List<ChartsData> execute(String reportId, int resourceIndex) {
-        return handleMaxAction(reportId, resourceIndex);
+        return handleSumAction(reportId, resourceIndex);
     }
 
 

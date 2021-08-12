@@ -29,6 +29,48 @@ public abstract class AbstractSummaryRealtime<T> implements SummaryRealtime<T> {
     @Resource
     protected ObjectMapper objectMapper;
 
+    protected SummaryRealtimeAction getSumAction(List<ChartsData> result) {
+        return (resultPart) -> {
+            try {
+                String reportValue = resultPart.getReportValue();
+                List<ChartsData> reportContent = objectMapper.readValue(reportValue, new TypeReference<List<ChartsData>>() {
+                });
+                // 第一遍不需要汇总
+                if (CollectionUtils.isEmpty(result)) {
+                    result.addAll(reportContent);
+                    return;
+                }
+                // 第二遍以后
+                result.addAll(reportContent);
+
+                Map<Tuple, List<ChartsData>> collect = result.stream().collect(Collectors.groupingBy(data -> new Tuple(data.getxAxis(), data.getGroupName())));
+                List<ChartsData> summaryDataList = collect.keySet().stream().map(k -> {
+                    ChartsData c = new ChartsData();
+                    BigDecimal y1Sum = collect.get(k).stream().map(ChartsData::getyAxis).reduce(new BigDecimal(0), BigDecimal::add);
+                    BigDecimal y2Sum = collect.get(k).stream().map(ChartsData::getyAxis2).reduce(new BigDecimal(0), BigDecimal::add);
+                    c.setxAxis(k.getxAxis());
+                    if (y1Sum.compareTo(BigDecimal.ZERO) < 0) {
+                        y1Sum = new BigDecimal(-1);
+                    }
+                    if (y2Sum.compareTo(BigDecimal.ZERO) < 0) {
+                        y2Sum = new BigDecimal(-1);
+                    }
+                    c.setyAxis(y1Sum);
+                    c.setyAxis2(y2Sum);
+                    c.setGroupName(k.getGroupName());
+                    return c;
+                }).collect(Collectors.toList());
+                // 清空
+                result.clear();
+                // 保留前几次的结果
+                result.addAll(summaryDataList);
+                // 返回
+            } catch (Exception e) {
+                LogUtil.error("getSumAction: ", e);
+            }
+        };
+    }
+
     protected SummaryRealtimeAction getMaxAction(List<ChartsData> result) {
         return (resultPart) -> {
             try {
@@ -46,8 +88,11 @@ public abstract class AbstractSummaryRealtime<T> implements SummaryRealtime<T> {
                 Map<Tuple, List<ChartsData>> collect = result.stream().collect(Collectors.groupingBy(data -> new Tuple(data.getxAxis(), data.getGroupName())));
                 List<ChartsData> summaryDataList = collect.keySet().stream().map(k -> {
                     ChartsData c = new ChartsData();
+                    // 这里是vu 需要 max
                     BigDecimal y1Sum = collect.get(k).stream().map(ChartsData::getyAxis).max(BigDecimal::compareTo).get();
-                    BigDecimal y2Sum = collect.get(k).stream().map(ChartsData::getyAxis2).max(BigDecimal::compareTo).get();
+                    // 这里专门处理 tps，需要 sum
+                    BigDecimal y2Sum = collect.get(k).stream().map(ChartsData::getyAxis2).reduce(new BigDecimal(0), BigDecimal::add);
+
                     c.setxAxis(k.getxAxis());
                     if (y1Sum.compareTo(BigDecimal.ZERO) < 0) {
                         y1Sum = new BigDecimal(-1);
@@ -119,6 +164,13 @@ public abstract class AbstractSummaryRealtime<T> implements SummaryRealtime<T> {
     protected List<ChartsData> handleMaxAction(String reportId, int resourceIndex) {
         List<ChartsData> result = new ArrayList<>();
         SummaryRealtimeAction summaryRealtimeAction = getMaxAction(result);
+        selectRealtimeAndDoSummary(reportId, resourceIndex, getReportKey(), summaryRealtimeAction);
+        return result;
+    }
+
+    protected List<ChartsData> handleSumAction(String reportId, int resourceIndex) {
+        List<ChartsData> result = new ArrayList<>();
+        SummaryRealtimeAction summaryRealtimeAction = getSumAction(result);
         selectRealtimeAndDoSummary(reportId, resourceIndex, getReportKey(), summaryRealtimeAction);
         return result;
     }
