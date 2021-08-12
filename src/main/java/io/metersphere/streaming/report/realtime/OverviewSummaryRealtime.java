@@ -54,6 +54,11 @@ public class OverviewSummaryRealtime extends AbstractSummaryRealtime<TestOvervie
                 BigDecimal bigDecimal1 = new BigDecimal(reportContent.getMaxUsers());
                 testOverview.setMaxUsers(bigDecimal1.max(bigDecimal2).toString());
 
+                testOverview.setAvgBandwidth(new BigDecimal(testOverview.getAvgBandwidth()).add(new BigDecimal(reportContent.getAvgBandwidth())).toString());
+                testOverview.setErrors(new BigDecimal(testOverview.getErrors()).add(new BigDecimal(reportContent.getErrors())).toString());
+                testOverview.setResponseTime90(new BigDecimal(testOverview.getResponseTime90()).add(new BigDecimal(reportContent.getResponseTime90())).toString());
+                testOverview.setAvgResponseTime(new BigDecimal(testOverview.getAvgResponseTime()).add(new BigDecimal(reportContent.getAvgResponseTime())).toString());
+
                 result.set(testOverview);
 
             } catch (Exception e) {
