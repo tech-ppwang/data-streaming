@@ -73,11 +73,10 @@ public class OverviewSummaryRealtime extends AbstractSummaryRealtime<TestOvervie
 
         testOverview.setResponseTime90(format4.format(new BigDecimal(testOverview.getResponseTime90()).divide(divisor, 4, BigDecimal.ROUND_HALF_UP)));
         testOverview.setAvgResponseTime(format4.format(new BigDecimal(testOverview.getAvgResponseTime()).divide(divisor, 4, BigDecimal.ROUND_HALF_UP)));
+        testOverview.setAvgBandwidth(format4.format(new BigDecimal(testOverview.getAvgBandwidth()).divide(divisor, 4, BigDecimal.ROUND_HALF_UP)));
 
         testOverview.setAvgTransactions(handleAvgTransactions(reportId, resourceIndex));
         testOverview.setErrors(handleErrors(reportId, resourceIndex));
-        testOverview.setAvgBandwidth(handleAvgBandwidth(reportId, resourceIndex));
-
 
         return testOverview;
     }
