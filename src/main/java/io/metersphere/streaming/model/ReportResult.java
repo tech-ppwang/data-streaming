@@ -11,6 +11,5 @@ public class ReportResult {
     private Integer resourceIndex;
     private Integer sort;
     private Boolean completed;
-    private Long duration;
     private Object content;
 }

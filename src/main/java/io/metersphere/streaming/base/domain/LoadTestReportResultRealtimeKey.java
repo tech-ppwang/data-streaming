@@ -1,6 +1,7 @@
 package io.metersphere.streaming.base.domain;
 
 import java.io.Serializable;
+
 import lombok.Data;
 
 @Data

@@ -80,7 +80,6 @@ public class ReportConsumer {
                     testResult.setReportKey(reportKey);
                     testResult.setResourceIndex(result.getResourceIndex());
                     testResult.setSort(result.getSort());
-                    testResult.setDuration(result.getDuration());
                     testResult.setReportValue(objectMapper.writeValueAsString(result.getContent()));
                     testResultSaveService.saveResultRealtime(testResult);
                     LogUtil.debug("报告: " + reportId + ", 保存" + reportKey + "耗时: " + (System.currentTimeMillis() - summaryStart));
