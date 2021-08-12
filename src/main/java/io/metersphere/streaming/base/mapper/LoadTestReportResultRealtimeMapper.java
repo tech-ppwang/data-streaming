@@ -3,9 +3,7 @@ package io.metersphere.streaming.base.mapper;
 import io.metersphere.streaming.base.domain.LoadTestReportResultRealtime;
 import io.metersphere.streaming.base.domain.LoadTestReportResultRealtimeExample;
 import io.metersphere.streaming.base.domain.LoadTestReportResultRealtimeKey;
-
 import java.util.List;
-
 import org.apache.ibatis.annotations.Param;
 
 public interface LoadTestReportResultRealtimeMapper {
@@ -34,4 +32,6 @@ public interface LoadTestReportResultRealtimeMapper {
     int updateByPrimaryKeySelective(LoadTestReportResultRealtime record);
 
     int updateByPrimaryKeyWithBLOBs(LoadTestReportResultRealtime record);
+
+    int updateByPrimaryKey(LoadTestReportResultRealtime record);
 }
