@@ -82,6 +82,9 @@ public class OverviewSummaryRealtime extends AbstractSummaryRealtime<TestOvervie
         key.setReportKey(ReportKeys.TotalTransactionsChart.name());
         LoadTestReportResultPart loadTestReportResultPart = loadTestReportResultPartMapper.selectByPrimaryKey(key);
         try {
+            if (loadTestReportResultPart == null) {
+                return "0";
+            }
             List<ChartsData> chartsData = objectMapper.readValue(loadTestReportResultPart.getReportValue(), new TypeReference<List<ChartsData>>() {
             });
             Map<String, List<ChartsData>> collect = chartsData.stream().collect(Collectors.groupingBy(ChartsData::getxAxis));
