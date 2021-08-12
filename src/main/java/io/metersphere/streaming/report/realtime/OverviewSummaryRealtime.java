@@ -152,7 +152,6 @@ public class OverviewSummaryRealtime extends AbstractSummaryRealtime<TestOvervie
             List<Errors> errorsList = objectMapper.readValue(loadTestReportResultPart.getReportValue(), new TypeReference<List<Errors>>() {
             });
             double eSum = errorsList.stream().mapToDouble(e -> Double.parseDouble(e.getPercentOfAllSamples())).sum();
-            BigDecimal sum = new BigDecimal(eSum);
             return format2.format(eSum);
         } catch (Exception e) {
             LogUtil.error(e.getMessage(), e);
