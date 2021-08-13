@@ -7,6 +7,8 @@ import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -21,13 +23,13 @@ public class TimeInfoSummaryRealtime extends AbstractSummaryRealtime<ReportTimeI
     @Override
     public ReportTimeInfo execute(String reportId, int resourceIndex) {
         AtomicReference<ReportTimeInfo> result = new AtomicReference<>();
-        AtomicLong sumDuration = new AtomicLong(0);
+        Map<Integer, Long> sortDuration = new ConcurrentHashMap<>();
         SummaryRealtimeAction action = (resultPart) -> {
             try {
                 String reportValue = resultPart.getReportValue();
                 ReportTimeInfo reportContent = objectMapper.readValue(reportValue, ReportTimeInfo.class);
-                sumDuration.addAndGet(reportContent.getDuration());
 
+                sortDuration.put(resultPart.getSort(), reportContent.getDuration());
                 // 第一遍不需要汇总
                 if (result.get() == null) {
                     result.set(reportContent);
@@ -54,7 +56,7 @@ public class TimeInfoSummaryRealtime extends AbstractSummaryRealtime<ReportTimeI
         selectRealtimeAndDoSummary(reportId, resourceIndex, getReportKey(), action);
 
         ReportTimeInfo timeInfo = result.get();
-        timeInfo.setRealtimeSumDuration(sumDuration.get());
+        timeInfo.setRealtimeSumDurations(sortDuration);
 
         return timeInfo;
     }

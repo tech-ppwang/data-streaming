@@ -29,6 +29,9 @@ public class RequestStatisticsSummaryRealtime extends AbstractSummaryRealtime<Li
 
     @Override
     public List<Statistics> execute(String reportId, int resourceIndex) {
+        ReportTimeInfo timeInfo = CommonBeanFactory.getBean(TimeInfoSummaryRealtime.class).execute(reportId, resourceIndex);
+        Map<Integer, Long> realtimeSumDurations = timeInfo.getRealtimeSumDurations();
+
         List<Statistics> result = new ArrayList<>();
         AtomicInteger sort = new AtomicInteger(1);
         SummaryRealtimeAction action = (resultPart) -> {
@@ -37,6 +40,13 @@ public class RequestStatisticsSummaryRealtime extends AbstractSummaryRealtime<Li
                 sort.set(resultPart.getSort());
                 List<Statistics> reportContent = objectMapper.readValue(reportValue, new TypeReference<List<Statistics>>() {
                 });
+
+                reportContent.forEach(statistics -> {
+                    statistics.setTransactions(format.format(new BigDecimal(statistics.getTransactions()).multiply(BigDecimal.valueOf(realtimeSumDurations.get(resultPart.getSort())))));
+                    statistics.setReceived(format.format(new BigDecimal(statistics.getReceived()).multiply(BigDecimal.valueOf(realtimeSumDurations.get(resultPart.getSort())))));
+                    statistics.setSent(format.format(new BigDecimal(statistics.getSent()).multiply(BigDecimal.valueOf(realtimeSumDurations.get(resultPart.getSort())))));
+                });
+
                 // 保存顺序
                 List<String> orderList = reportContent.stream().map(Statistics::getLabel).collect(Collectors.toList());
                 // 第一遍不需要汇总
@@ -66,8 +76,6 @@ public class RequestStatisticsSummaryRealtime extends AbstractSummaryRealtime<Li
         selectRealtimeAndDoSummary(reportId, resourceIndex, getReportKey(), action);
         BigDecimal divisor = new BigDecimal(sort.get());
         //
-        ReportTimeInfo timeInfo = CommonBeanFactory.getBean(TimeInfoSummaryRealtime.class).execute(reportId, resourceIndex);
-        double times = timeInfo.getRealtimeSumDuration() * 1.0 / timeInfo.getDuration();
 
         result.forEach(statistics -> {
             statistics.setError(format.format(new BigDecimal(statistics.getFail()).divide(new BigDecimal(statistics.getSamples()), 4, BigDecimal.ROUND_HALF_UP).multiply(oneHundred)));
@@ -76,9 +84,9 @@ public class RequestStatisticsSummaryRealtime extends AbstractSummaryRealtime<Li
             statistics.setTp90(format.format(new BigDecimal(statistics.getTp90()).divide(divisor, 4, BigDecimal.ROUND_HALF_UP)));
             statistics.setTp95(format.format(new BigDecimal(statistics.getTp95()).divide(divisor, 4, BigDecimal.ROUND_HALF_UP)));
             statistics.setTp99(format.format(new BigDecimal(statistics.getTp99()).divide(divisor, 4, BigDecimal.ROUND_HALF_UP)));
-            statistics.setTransactions(format.format(new BigDecimal(statistics.getTransactions()).multiply(BigDecimal.valueOf(times)).divide(divisor, 4, BigDecimal.ROUND_HALF_UP)));
-            statistics.setReceived(format.format(new BigDecimal(statistics.getReceived()).multiply(BigDecimal.valueOf(times)).divide(divisor, 4, BigDecimal.ROUND_HALF_UP)));
-            statistics.setSent(format.format(new BigDecimal(statistics.getSent()).multiply(BigDecimal.valueOf(times)).divide(divisor, 4, BigDecimal.ROUND_HALF_UP)));
+            statistics.setTransactions(format.format(new BigDecimal(statistics.getTransactions()).divide(BigDecimal.valueOf(timeInfo.getDuration()), 4, BigDecimal.ROUND_HALF_UP)));
+            statistics.setReceived(format.format(new BigDecimal(statistics.getReceived()).divide(BigDecimal.valueOf(timeInfo.getDuration()), 4, BigDecimal.ROUND_HALF_UP)));
+            statistics.setSent(format.format(new BigDecimal(statistics.getSent()).divide(BigDecimal.valueOf(timeInfo.getDuration()), 4, BigDecimal.ROUND_HALF_UP)));
         });
 
         // 把 total 放到最后
