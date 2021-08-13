@@ -105,7 +105,7 @@ public class OverviewSummaryRealtime extends AbstractSummaryRealtime<TestOvervie
                 sum = sum.add(y1Sum);
             }
             BigDecimal avgTrans = sum.divide(new BigDecimal(xAxisList.size()), 4, BigDecimal.ROUND_HALF_UP);
-            return format2.format(avgTrans);
+            return format2.format(avgTrans.divide(BigDecimal.valueOf(1024), 4, BigDecimal.ROUND_HALF_UP));
         } catch (Exception e) {
             LogUtil.error(e.getMessage(), e);
         }
