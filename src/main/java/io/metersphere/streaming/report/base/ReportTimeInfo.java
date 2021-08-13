@@ -9,4 +9,5 @@ public class ReportTimeInfo {
     private long startTime;
     private long endTime;
 
+    private long realtimeSumDuration;
 }

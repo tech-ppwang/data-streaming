@@ -93,12 +93,12 @@ public class TestResultSaveService {
     public void saveSummary(String reportId, String reportKey) {
         try {
             Object summary = SummaryFactory.getSummaryExecutor(reportKey).execute(reportId);
-            LoadTestReportResult record = new LoadTestReportResult();
-            record.setId(UUID.randomUUID().toString());
-            record.setReportId(reportId);
-            record.setReportKey(reportKey);
-            record.setReportValue(objectMapper.writeValueAsString(summary));
-            saveResult(record);
+//            LoadTestReportResult record = new LoadTestReportResult();
+//            record.setId(UUID.randomUUID().toString());
+//            record.setReportId(reportId);
+//            record.setReportKey(reportKey);
+//            record.setReportValue(objectMapper.writeValueAsString(summary));
+//            saveResult(record);
         } catch (Exception e) {
             LogUtil.error("保存 [" + reportId + "], [" + reportKey + "] 报错了", e);
         }
@@ -219,12 +219,12 @@ public class TestResultSaveService {
     public void saveSummaryRealtime(String reportId, String reportKey, Integer resourceIndex) {
         try {
             Object summary = SummaryRealtimeFactory.getSummaryExecutor(reportKey).execute(reportId, resourceIndex);
-            LoadTestReportResultPart record = new LoadTestReportResultPart();
-            record.setReportId(reportId);
-            record.setReportKey(reportKey);
-            record.setResourceIndex(resourceIndex);
-            record.setReportValue(objectMapper.writeValueAsString(summary));
-            saveResultPart(record);
+//            LoadTestReportResultPart record = new LoadTestReportResultPart();
+//            record.setReportId(reportId);
+//            record.setReportKey(reportKey);
+//            record.setResourceIndex(resourceIndex);
+//            record.setReportValue(objectMapper.writeValueAsString(summary));
+//            saveResultPart(record);
         } catch (Exception e) {
             LogUtil.error("保存 [" + reportId + "], [" + reportKey + "] 报错了", e);
         }

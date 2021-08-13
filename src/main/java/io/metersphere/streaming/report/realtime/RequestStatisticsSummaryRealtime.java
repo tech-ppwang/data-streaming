@@ -2,7 +2,9 @@ package io.metersphere.streaming.report.realtime;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import io.metersphere.streaming.commons.constants.ReportKeys;
+import io.metersphere.streaming.commons.utils.CommonBeanFactory;
 import io.metersphere.streaming.commons.utils.LogUtil;
+import io.metersphere.streaming.report.base.ReportTimeInfo;
 import io.metersphere.streaming.report.base.Statistics;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -63,6 +65,10 @@ public class RequestStatisticsSummaryRealtime extends AbstractSummaryRealtime<Li
         };
         selectRealtimeAndDoSummary(reportId, resourceIndex, getReportKey(), action);
         BigDecimal divisor = new BigDecimal(sort.get());
+        //
+        ReportTimeInfo timeInfo = CommonBeanFactory.getBean(TimeInfoSummaryRealtime.class).execute(reportId, resourceIndex);
+        double times = timeInfo.getRealtimeSumDuration() * 1.0 / timeInfo.getDuration();
+
         result.forEach(statistics -> {
             statistics.setError(format.format(new BigDecimal(statistics.getFail()).divide(new BigDecimal(statistics.getSamples()), 4, BigDecimal.ROUND_HALF_UP).multiply(oneHundred)));
             statistics.setAverage(format.format(new BigDecimal(statistics.getAverage()).divide(divisor, 4, BigDecimal.ROUND_HALF_UP)));
@@ -70,9 +76,9 @@ public class RequestStatisticsSummaryRealtime extends AbstractSummaryRealtime<Li
             statistics.setTp90(format.format(new BigDecimal(statistics.getTp90()).divide(divisor, 4, BigDecimal.ROUND_HALF_UP)));
             statistics.setTp95(format.format(new BigDecimal(statistics.getTp95()).divide(divisor, 4, BigDecimal.ROUND_HALF_UP)));
             statistics.setTp99(format.format(new BigDecimal(statistics.getTp99()).divide(divisor, 4, BigDecimal.ROUND_HALF_UP)));
-            statistics.setTransactions(format.format(new BigDecimal(statistics.getTransactions()).divide(divisor, 4, BigDecimal.ROUND_HALF_UP)));
-            statistics.setReceived(format.format(new BigDecimal(statistics.getReceived()).divide(divisor, 4, BigDecimal.ROUND_HALF_UP)));
-            statistics.setSent(format.format(new BigDecimal(statistics.getSent()).divide(divisor, 4, BigDecimal.ROUND_HALF_UP)));
+            statistics.setTransactions(format.format(new BigDecimal(statistics.getTransactions()).multiply(BigDecimal.valueOf(times)).divide(divisor, 4, BigDecimal.ROUND_HALF_UP)));
+            statistics.setReceived(format.format(new BigDecimal(statistics.getReceived()).multiply(BigDecimal.valueOf(times)).divide(divisor, 4, BigDecimal.ROUND_HALF_UP)));
+            statistics.setSent(format.format(new BigDecimal(statistics.getSent()).multiply(BigDecimal.valueOf(times)).divide(divisor, 4, BigDecimal.ROUND_HALF_UP)));
         });
 
         // 把 total 放到最后
