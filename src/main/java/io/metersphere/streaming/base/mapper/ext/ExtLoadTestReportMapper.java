@@ -44,6 +44,12 @@ public interface ExtLoadTestReportMapper {
             "SELECT report_id AS reportId, report_key AS reportKey, resource_index AS resourceIndex, report_value AS reportValue, sort",
             "FROM load_test_report_result_realtime ",
             "WHERE report_id = #{reportId} AND report_key = #{reportKey} AND resource_index = #{resourceIndex} ",
+            "AND sort <= (SELECT num FROM (SELECT MAX(sort), COUNT(1) AS num ",
+            "FROM load_test_report_result_realtime ",
+            "WHERE report_id = #{reportId}  AND report_key = 'TimeInfo' ",
+            "GROUP BY resource_index ",
+            "ORDER BY num ",
+            "LIMIT 1) tmp)",
             "ORDER BY sort "
     })
     @Options(fetchSize = Integer.MIN_VALUE, resultSetType = ResultSetType.FORWARD_ONLY)
