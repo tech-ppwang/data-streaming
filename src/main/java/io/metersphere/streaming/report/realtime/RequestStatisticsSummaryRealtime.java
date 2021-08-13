@@ -84,9 +84,11 @@ public class RequestStatisticsSummaryRealtime extends AbstractSummaryRealtime<Li
             statistics.setTp90(format.format(new BigDecimal(statistics.getTp90()).divide(divisor, 4, BigDecimal.ROUND_HALF_UP)));
             statistics.setTp95(format.format(new BigDecimal(statistics.getTp95()).divide(divisor, 4, BigDecimal.ROUND_HALF_UP)));
             statistics.setTp99(format.format(new BigDecimal(statistics.getTp99()).divide(divisor, 4, BigDecimal.ROUND_HALF_UP)));
-            statistics.setTransactions(format.format(new BigDecimal(statistics.getTransactions()).divide(BigDecimal.valueOf(timeInfo.getDuration()), 4, BigDecimal.ROUND_HALF_UP)));
-            statistics.setReceived(format.format(new BigDecimal(statistics.getReceived()).divide(BigDecimal.valueOf(timeInfo.getDuration()), 4, BigDecimal.ROUND_HALF_UP)));
-            statistics.setSent(format.format(new BigDecimal(statistics.getSent()).divide(BigDecimal.valueOf(timeInfo.getDuration()), 4, BigDecimal.ROUND_HALF_UP)));
+            if (timeInfo.getDuration() > 0) {
+                statistics.setTransactions(format.format(new BigDecimal(statistics.getTransactions()).divide(BigDecimal.valueOf(timeInfo.getDuration()), 4, BigDecimal.ROUND_HALF_UP)));
+                statistics.setReceived(format.format(new BigDecimal(statistics.getReceived()).divide(BigDecimal.valueOf(timeInfo.getDuration()), 4, BigDecimal.ROUND_HALF_UP)));
+                statistics.setSent(format.format(new BigDecimal(statistics.getSent()).divide(BigDecimal.valueOf(timeInfo.getDuration()), 4, BigDecimal.ROUND_HALF_UP)));
+            }
         });
 
         // 把 total 放到最后
