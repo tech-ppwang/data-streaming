@@ -1,11 +1,11 @@
-FROM openjdk:8-jdk-alpine as build
+FROM 192.168.0.134/openjdk/openjdk:8-jdk-alpine as build
 WORKDIR /workspace/app
 
 COPY target/*.jar .
 
 RUN mkdir -p dependency && (cd dependency; jar -xf ../*.jar)
 
-FROM metersphere/fabric8-java-alpine-openjdk8-jre
+FROM 192.168.0.134/metersphere/fabric8-java-alpine-openjdk8-jre
 
 LABEL maintainer="FIT2CLOUD <support@fit2cloud.com>"
 
