@@ -11,7 +11,6 @@ import io.metersphere.streaming.base.mapper.LoadTestReportResultMapper;
 import io.metersphere.streaming.base.mapper.ext.ExtLoadTestMapper;
 import io.metersphere.streaming.base.mapper.ext.ExtLoadTestReportMapper;
 import io.metersphere.streaming.commons.constants.GranularityData;
-import io.metersphere.streaming.commons.constants.ReportKeys;
 import io.metersphere.streaming.commons.constants.TestStatus;
 import io.metersphere.streaming.commons.utils.CommonBeanFactory;
 import io.metersphere.streaming.commons.utils.CompressUtils;
@@ -22,8 +21,6 @@ import io.metersphere.streaming.model.AdvancedConfig;
 import io.metersphere.streaming.model.Metric;
 import io.metersphere.streaming.model.PressureConfig;
 import io.metersphere.streaming.report.ReportGeneratorFactory;
-import io.metersphere.streaming.report.base.ReportTimeInfo;
-import io.metersphere.streaming.report.base.TestOverview;
 import io.metersphere.streaming.report.impl.AbstractReport;
 import io.metersphere.streaming.report.parse.ResultDataParse;
 import org.apache.commons.io.FileUtils;
@@ -160,6 +157,32 @@ public class TestResultService {
         completeThreadPool.schedule(() -> generateReportComplete(report.getId()), 30, TimeUnit.SECONDS);
     }
 
+    public void completeReport(String reportId, int resourceIndex) {
+        LoadTestReportWithBLOBs report = loadTestReportMapper.selectByPrimaryKey(reportId);
+        if (report == null) {
+            LogUtil.info("Report is null.");
+            return;
+        }
+        LogUtil.info("等待所有的节点都结束 {}_{}", reportId, resourceIndex);
+        // 检查所有的节点状态, 结果为 true 表示所有的节点都结束了
+        if (!extLoadTestReportMapper.checkReportPartStatus(reportId)) {
+            return;
+        }
+
+        // 测试结束后保存状态
+        report.setUpdateTime(System.currentTimeMillis());
+        report.setStatus(TestStatus.Completed.name());
+        loadTestReportMapper.updateByPrimaryKeySelective(report);
+
+        // 更新测试的状态
+        LoadTestWithBLOBs loadTest = new LoadTestWithBLOBs();
+        loadTest.setId(report.getTestId());
+        loadTest.setStatus(TestStatus.Completed.name());
+        loadTestMapper.updateByPrimaryKeySelective(loadTest);
+
+        LogUtil.info("test completed: " + report.getTestId());
+    }
+
     private void saveJtlFile(String reportId) {
         LoadTestReportDetailExample example1 = new LoadTestReportDetailExample();
         example1.createCriteria().andReportIdEqualTo(reportId);
@@ -289,51 +312,9 @@ public class TestResultService {
         } catch (InterruptedException e) {
             LogUtil.error(e);
         } finally {
-            saveReportOverview(reportId);
-            saveReportTimeInfo(reportId);
+            testResultSaveService.saveReportOverview(reportId);
+            testResultSaveService.saveReportTimeInfo(reportId);
             testResultSaveService.saveReportReadyStatus(reportId);
-        }
-    }
-
-    private void saveReportOverview(String reportId) {
-        LoadTestReportResultExample example1 = new LoadTestReportResultExample();
-        example1.createCriteria().andReportIdEqualTo(reportId).andReportKeyEqualTo(ReportKeys.Overview.name());
-        List<LoadTestReportResult> loadTestReportResults = loadTestReportResultMapper.selectByExampleWithBLOBs(example1);
-        if (loadTestReportResults.size() > 0) {
-            LoadTestReportResult loadTestReportResult = loadTestReportResults.get(0);
-            String reportValue = loadTestReportResult.getReportValue();
-            try {
-                TestOverview testOverview = objectMapper.readValue(reportValue, TestOverview.class);
-                LoadTestReportWithBLOBs report = new LoadTestReportWithBLOBs();
-                report.setId(reportId);
-                report.setMaxUsers(testOverview.getMaxUsers());
-                report.setAvgResponseTime(testOverview.getAvgResponseTime());
-                report.setTps(testOverview.getAvgTransactions());
-                loadTestReportMapper.updateByPrimaryKeySelective(report);
-            } catch (JsonProcessingException e) {
-                LogUtil.error(e);
-            }
-        }
-    }
-
-    private void saveReportTimeInfo(String reportId) {
-        LoadTestReportResultExample example1 = new LoadTestReportResultExample();
-        example1.createCriteria().andReportIdEqualTo(reportId).andReportKeyEqualTo(ReportKeys.TimeInfo.name());
-        List<LoadTestReportResult> loadTestReportResults = loadTestReportResultMapper.selectByExampleWithBLOBs(example1);
-        if (loadTestReportResults.size() > 0) {
-            LoadTestReportResult loadTestReportResult = loadTestReportResults.get(0);
-            String reportValue = loadTestReportResult.getReportValue();
-            try {
-                ReportTimeInfo timeInfo = objectMapper.readValue(reportValue, ReportTimeInfo.class);
-                LoadTestReportWithBLOBs report = new LoadTestReportWithBLOBs();
-                report.setId(reportId);
-                report.setTestStartTime(timeInfo.getStartTime());
-                report.setTestEndTime(timeInfo.getEndTime());
-                report.setTestDuration(timeInfo.getDuration());
-                loadTestReportMapper.updateByPrimaryKeySelective(report);
-            } catch (JsonProcessingException e) {
-                LogUtil.error(e);
-            }
         }
     }
 
