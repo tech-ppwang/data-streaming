@@ -12,8 +12,6 @@ public enum ReportKeys {
     ResponseCodeChart,
     TransactionsChart,
     TotalTransactionsChart,
-    ResponseTimeVsRequestChart,
-    LatencyVsRequestChart,
     ErrorsChart,
     Errors,
     ErrorsTop5,
