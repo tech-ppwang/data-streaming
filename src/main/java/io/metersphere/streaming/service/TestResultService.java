@@ -245,12 +245,15 @@ public class TestResultService {
     }
 
     private void generateReportComplete(String reportId) {
+        Long logTime = System.currentTimeMillis();
+
         LoadTestReportWithBLOBs report = new LoadTestReportWithBLOBs();
         report.setId(reportId);
         report.setUpdateTime(System.currentTimeMillis());
         // 测试结束后执行计算报告
         report.setStatus(TestStatus.Reporting.name());
-        loadTestReportMapper.updateByPrimaryKeySelective(report);
+        int i = loadTestReportMapper.updateByPrimaryKeySelective(report);
+        LogUtil.info("xxxxxxxxxxx:" + logTime + ":" +  "256:" + reportId + ":" + i);
         // 检查 状态
         while (!testResultSaveService.isReportingSet(reportId)) {
             try {
@@ -259,25 +262,35 @@ public class TestResultService {
                 LogUtil.error(e);
             }
         }
+        LogUtil.info("xxxxxxxxxxx:" + logTime + ":" + "265:" + reportId);
 
         // 强制执行一次生成报告
         generateReport(reportId);
+        LogUtil.info("xxxxxxxxxxx:" + logTime + ":" + "269:" + reportId);
         // 保存jtl
         saveJtlFile(reportId);
+        LogUtil.info("xxxxxxxxxxx:" + logTime + ":" + "272:" + reportId);
         // 标记结束
         testResultSaveService.saveReportCompletedStatus(reportId);
+        LogUtil.info("xxxxxxxxxxx:" + logTime + ":" + "275:" + reportId);
 
         // 测试结束后保存状态
         report.setUpdateTime(System.currentTimeMillis());
+        LogUtil.info("xxxxxxxxxxx:" + logTime + ":" + "279:" + reportId);
         report.setStatus(TestStatus.Completed.name());
-        loadTestReportMapper.updateByPrimaryKeySelective(report);
+        LogUtil.info("xxxxxxxxxxx:" + logTime + ":" + "281:" + reportId);
+        i = loadTestReportMapper.updateByPrimaryKeySelective(report);
+        LogUtil.info("xxxxxxxxxxx:" + logTime + ":" + "283:" + reportId + ":" + i);
         // 发送成功通知
         LoadTestReportWithBLOBs loadTestReport = loadTestReportMapper.selectByPrimaryKey(reportId);
         loadTestProducer.sendMessage(loadTestReport);
+        LogUtil.info("xxxxxxxxxxx:" + logTime + ":" + "287:" + reportId);
         // 清理中间文件
         LoadTestReportDetailExample example2 = new LoadTestReportDetailExample();
         example2.createCriteria().andReportIdEqualTo(report.getId());
+        LogUtil.info("xxxxxxxxxxx:" + logTime + ":" + "291:" + reportId);
         loadTestReportDetailMapper.deleteByExample(example2);
+        LogUtil.info("xxxxxxxxxxx:" + logTime + ":" + "293:" + reportId);
     }
 
     public void generateReport(String reportId) {
