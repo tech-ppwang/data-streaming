@@ -245,6 +245,12 @@ public class TestResultService {
     }
 
     private void generateReportComplete(String reportId) {
+        LoadTestReport loadTestReportNow = loadTestReportMapper.selectByPrimaryKey(reportId);
+        // 如果当前状态已经是completed，就不再操作，否则因为因为并发问题导致报告的状态又变回reporting，同时也导致下面的while会陷入死循环
+        if (loadTestReportNow.getStatus().equals(TestStatus.Completed.name())) {
+            return;
+        }
+
         LoadTestReportWithBLOBs report = new LoadTestReportWithBLOBs();
         report.setId(reportId);
         report.setUpdateTime(System.currentTimeMillis());
