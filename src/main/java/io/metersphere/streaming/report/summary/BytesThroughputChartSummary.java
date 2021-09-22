@@ -2,10 +2,8 @@ package io.metersphere.streaming.report.summary;
 
 import io.metersphere.streaming.commons.constants.ReportKeys;
 import io.metersphere.streaming.report.base.ChartsData;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Component("bytesThroughputChartSummary")

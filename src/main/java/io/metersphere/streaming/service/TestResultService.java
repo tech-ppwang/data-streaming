@@ -173,7 +173,9 @@ public class TestResultService {
         report.setUpdateTime(System.currentTimeMillis());
         report.setStatus(TestStatus.Completed.name());
         loadTestReportMapper.updateByPrimaryKeySelective(report);
-
+        // 发送成功通知
+        LoadTestReportWithBLOBs loadTestReport = loadTestReportMapper.selectByPrimaryKey(reportId);
+        loadTestProducer.sendMessage(loadTestReport);
         // 更新测试的状态
         LoadTestWithBLOBs loadTest = new LoadTestWithBLOBs();
         loadTest.setId(report.getTestId());
