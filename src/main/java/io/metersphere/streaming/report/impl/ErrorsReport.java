@@ -21,8 +21,8 @@ public class ErrorsReport extends AbstractReport {
         SampleContext sampleContext = sampleContextMap.get(ErrorsSummaryConsumer.class.getSimpleName());
         List<Errors> errors = ResultDataParse.summaryMapParsing(sampleContext.getData(), Errors.class);
         errors.forEach(e -> {
-            e.setPercentOfErrors(format2.format(new BigDecimal(e.getPercentOfErrors())));
-            e.setPercentOfAllSamples(format2.format(new BigDecimal(e.getPercentOfAllSamples())));
+            e.setPercentOfErrors(format3.format(new BigDecimal(e.getPercentOfErrors())));
+            e.setPercentOfAllSamples(format3.format(new BigDecimal(e.getPercentOfAllSamples())));
         });
         saveResult(reportId, errors);
     }

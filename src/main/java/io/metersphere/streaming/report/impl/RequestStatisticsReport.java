@@ -21,7 +21,7 @@ public class RequestStatisticsReport extends AbstractReport {
     @Override
     public void execute() {
 
-        DecimalFormat decimalFormat = new DecimalFormat("0.00");
+        DecimalFormat decimalFormat = new DecimalFormat("0.000");
         SampleContext statisticsDataMap = sampleContextMap.get(StatisticsSummaryConsumer.class.getSimpleName());
         List<Statistics> statistics = ResultDataParse.summaryMapParsing(statisticsDataMap.getData(), Statistics.class);
 
