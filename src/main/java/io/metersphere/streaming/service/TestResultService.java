@@ -7,9 +7,9 @@ import io.metersphere.streaming.base.domain.*;
 import io.metersphere.streaming.base.mapper.LoadTestMapper;
 import io.metersphere.streaming.base.mapper.LoadTestReportDetailMapper;
 import io.metersphere.streaming.base.mapper.LoadTestReportMapper;
-import io.metersphere.streaming.base.mapper.LoadTestReportResultMapper;
 import io.metersphere.streaming.base.mapper.ext.ExtLoadTestMapper;
 import io.metersphere.streaming.base.mapper.ext.ExtLoadTestReportMapper;
+import io.metersphere.streaming.base.mapper.ext.ExtLoadTestReportResultMapper;
 import io.metersphere.streaming.commons.constants.GranularityData;
 import io.metersphere.streaming.commons.constants.TestStatus;
 import io.metersphere.streaming.commons.utils.CommonBeanFactory;
@@ -40,7 +40,10 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicReference;
 
 @Service
@@ -66,7 +69,7 @@ public class TestResultService {
     @Resource
     private ObjectMapper objectMapper;
     @Resource
-    private LoadTestReportResultMapper loadTestReportResultMapper;
+    private ExtLoadTestReportResultMapper extLoadTestReportResultMapper;
 
     public static final String TEMP_DIRECTORY_PATH = FileUtils.getTempDirectoryPath();
 
@@ -140,21 +143,28 @@ public class TestResultService {
         return StringUtils.remove(metric.getFailureMessage(), "\n");
     }
 
+    @Transactional(rollbackFor = Exception.class)
     public void completeReport(Metric metric) {
         LoadTestReport report = loadTestReportMapper.selectByPrimaryKey(metric.getReportId());
         if (report == null) {
             LogUtil.info("Report is null.");
             return;
         }
+        // 更新complete count
+        extLoadTestReportResultMapper.updateReportCompleteCount(metric.getReportId());
 
+        int count = extLoadTestReportResultMapper.selectReportCompleteCount(metric.getReportId());
+        if (count > 0) { // count == 0 表示最后一个结束信息已经上传
+            LogUtil.info("等待其他节点结束: " + report.getTestId());
+            return;
+        }
         // 更新测试的状态
         LoadTestWithBLOBs loadTest = new LoadTestWithBLOBs();
         loadTest.setId(report.getTestId());
         loadTest.setStatus(TestStatus.Completed.name());
         loadTestMapper.updateByPrimaryKeySelective(loadTest);
         LogUtil.info("test completed: " + report.getTestId());
-        // 确保计算报告完全执行, 等待其他节点都保存后执行计算
-        completeThreadPool.schedule(() -> generateReportComplete(report.getId()), 30, TimeUnit.SECONDS);
+        completeThreadPool.submit(() -> generateReportComplete(report.getId()));
     }
 
     public void completeReport(String reportId, int resourceIndex) {
