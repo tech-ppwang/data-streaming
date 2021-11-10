@@ -28,6 +28,6 @@ public interface ExtLoadTestReportResultMapper {
             "WHERE report_id = #{reportId} AND report_key = 'ReportCompleteCount'"})
     int updateReportCompleteCount(@Param("reportId") String reportId);
 
-    @Select({"SELECT COUNT(1) FROM load_test_report_result WHERE report_id = #{reportResult.reportId} AND report_key = 'ReportCompleteCount' "})
+    @Select({"SELECT COUNT(1) FROM load_test_report_result WHERE report_id = #{reportId} AND report_key = 'ReportCompleteCount' "})
     int selectReportCompleteCount(@Param("reportId") String reportId);
 }
