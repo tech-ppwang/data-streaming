@@ -10,7 +10,7 @@
     </parent>
     <groupId>io.metersphere</groupId>
     <artifactId>data-streaming</artifactId>
-    <version>1.10</version>
+    <version>1.15</version>
     <name>data-streaming</name>
 
     <properties>
