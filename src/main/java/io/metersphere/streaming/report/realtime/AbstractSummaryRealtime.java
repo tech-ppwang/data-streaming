@@ -24,7 +24,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public abstract class AbstractSummaryRealtime<T> implements SummaryRealtime<T> {
-    protected DecimalFormat format = new DecimalFormat("0.00");
+    protected DecimalFormat format = new DecimalFormat("0.000");
 
     @Resource
     protected ObjectMapper objectMapper;

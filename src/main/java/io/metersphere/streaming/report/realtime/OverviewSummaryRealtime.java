@@ -24,8 +24,7 @@ import java.util.stream.Collectors;
 
 @Component("overviewSummaryRealtime")
 public class OverviewSummaryRealtime extends AbstractSummaryRealtime<TestOverview> {
-    private final DecimalFormat format4 = new DecimalFormat("0.0000");
-    private final DecimalFormat format2 = new DecimalFormat("0.00");
+    private final DecimalFormat format3 = new DecimalFormat("0.000");
 
     @Resource
     private LoadTestReportResultPartMapper loadTestReportResultPartMapper;
@@ -71,9 +70,9 @@ public class OverviewSummaryRealtime extends AbstractSummaryRealtime<TestOvervie
         BigDecimal divisor = new BigDecimal(sort.get());
         TestOverview testOverview = result.get();
 
-        testOverview.setResponseTime90(format4.format(new BigDecimal(testOverview.getResponseTime90()).divide(divisor, 4, BigDecimal.ROUND_HALF_UP)));
-        testOverview.setAvgResponseTime(format4.format(new BigDecimal(testOverview.getAvgResponseTime()).divide(divisor, 4, BigDecimal.ROUND_HALF_UP)));
-//        testOverview.setAvgBandwidth(format4.format(new BigDecimal(testOverview.getAvgBandwidth()).divide(divisor, 4, BigDecimal.ROUND_HALF_UP)));
+        testOverview.setResponseTime90(format3.format(new BigDecimal(testOverview.getResponseTime90()).divide(divisor, 4, BigDecimal.ROUND_HALF_UP)));
+        testOverview.setAvgResponseTime(format3.format(new BigDecimal(testOverview.getAvgResponseTime()).divide(divisor, 4, BigDecimal.ROUND_HALF_UP)));
+//        testOverview.setAvgBandwidth(format3.format(new BigDecimal(testOverview.getAvgBandwidth()).divide(divisor, 4, BigDecimal.ROUND_HALF_UP)));
 
         testOverview.setAvgBandwidth(handleAvgBandwidth(reportId, resourceIndex));
         testOverview.setAvgTransactions(handleAvgTransactions(reportId, resourceIndex));
@@ -105,7 +104,7 @@ public class OverviewSummaryRealtime extends AbstractSummaryRealtime<TestOvervie
                 sum = sum.add(y1Sum);
             }
             BigDecimal avgTrans = sum.divide(new BigDecimal(xAxisList.size()), 4, BigDecimal.ROUND_HALF_UP);
-            return format2.format(avgTrans.divide(BigDecimal.valueOf(1024), 4, BigDecimal.ROUND_HALF_UP));
+            return format3.format(avgTrans.divide(BigDecimal.valueOf(1024), 4, BigDecimal.ROUND_HALF_UP));
         } catch (Exception e) {
             LogUtil.error(e.getMessage(), e);
         }
@@ -132,7 +131,7 @@ public class OverviewSummaryRealtime extends AbstractSummaryRealtime<TestOvervie
                 sum = sum.add(y1Sum);
             }
             BigDecimal avgTrans = sum.divide(new BigDecimal(xAxisList.size()), 4, BigDecimal.ROUND_HALF_UP);
-            return format2.format(avgTrans);
+            return format3.format(avgTrans);
         } catch (Exception e) {
             LogUtil.error(e.getMessage(), e);
         }
@@ -152,7 +151,7 @@ public class OverviewSummaryRealtime extends AbstractSummaryRealtime<TestOvervie
             List<Errors> errorsList = objectMapper.readValue(loadTestReportResultPart.getReportValue(), new TypeReference<List<Errors>>() {
             });
             double eSum = errorsList.stream().mapToDouble(e -> Double.parseDouble(e.getPercentOfAllSamples())).sum();
-            return format2.format(eSum);
+            return format3.format(eSum);
         } catch (Exception e) {
             LogUtil.error(e.getMessage(), e);
         }
