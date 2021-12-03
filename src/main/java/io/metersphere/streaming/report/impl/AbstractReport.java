@@ -41,6 +41,6 @@ public abstract class AbstractReport implements Report {
             LogUtil.error(e);
         }
         testResultSaveService.saveResult(record);
-        LogUtil.info("Report generate success: {}, reportId: {}", getReportKey(), reportId);
+        LogUtil.debug("Report generate success: {}, reportId: {}", getReportKey(), reportId);
     }
 }

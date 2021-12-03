@@ -250,7 +250,7 @@ public class TestResultService {
         // 检查 report_status
         boolean set = testResultSaveService.isReportingSet(reportId);
         if (!set) {
-            LogUtil.info("report generator is running.");
+            LogUtil.info("有其他线程正在计算报告, reportId: " + reportId);
             return;
         }
         completeThreadPool.submit(() -> generateReport(reportId));
@@ -299,23 +299,17 @@ public class TestResultService {
     }
 
     public void generateReport(String reportId) {
-
-        LoadTestReportDetailExample example = new LoadTestReportDetailExample();
-        example.createCriteria().andReportIdEqualTo(reportId);
-        // 防止中间文件删除之后又执行生成报告导致报错的问题
-        if (loadTestReportDetailMapper.countByExample(example) < 2) {
-            return;
-        }
+        long start = System.currentTimeMillis();
         // 获取聚合时间
         Integer granularity = getGranularity(reportId);
         List<AbstractReport> reportGenerators = ReportGeneratorFactory.getReportGenerators();
-        LogUtil.info("report generators size: {}", reportGenerators.size());
+        LogUtil.debug("report generators size: {}", reportGenerators.size());
         CountDownLatch countDownLatch = new CountDownLatch(reportGenerators.size());
 
-        Map<String, SampleContext> sampleContextMap = ResultDataParse.initJMeterConsumer(reportId, ResultDataParse.initConsumerList(granularity));
+        Map<String, SampleContext> sampleContextMap = ResultDataParse.computeReport(reportId, ResultDataParse.initConsumerList(granularity));
 
         reportGenerators.forEach(r -> reportThreadPool.execute(() -> {
-            LogUtil.info("Report Key: " + r.getReportKey());
+            LogUtil.debug("Report Key: " + r.getReportKey());
             r.init(reportId, sampleContextMap);
             try {
                 r.execute();
@@ -334,6 +328,7 @@ public class TestResultService {
             testResultSaveService.saveReportTimeInfo(reportId);
             testResultSaveService.saveReportReadyStatus(reportId);
         }
+        LogUtil.info("本次报告[{}]计算结束耗时: {}ms", reportId, System.currentTimeMillis() - start);
     }
 
     public Integer getGranularity(String reportId) {

@@ -24,7 +24,7 @@ public class MetricDataService {
 
     public synchronized int save() {
         int size = metricList.size();
-        LogUtil.info("save metrics size: " + size);
+        LogUtil.debug("save metrics size: " + size);
         Map<String, List<Metric>> reportMetrics = metricList.stream().collect(Collectors.groupingBy(Metric::getReportId));
         reportMetrics.forEach((reportId, metrics) -> {
             String testId = "";
