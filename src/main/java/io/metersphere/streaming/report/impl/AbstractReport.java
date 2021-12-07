@@ -32,7 +32,6 @@ public abstract class AbstractReport implements Report {
 
     public void saveResult(String reportId, Object content) {
         LoadTestReportResult record = new LoadTestReportResult();
-        record.setId(UUID.randomUUID().toString());
         record.setReportId(reportId);
         record.setReportKey(getReportKey());
         try {
