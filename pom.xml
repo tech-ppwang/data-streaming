@@ -15,7 +15,7 @@
 
     <properties>
         <java.version>1.8</java.version>
-        <jmeter.version>5.4.1</jmeter.version>
+        <jmeter.version>5.4.2</jmeter.version>
     </properties>
 
     <dependencies>
