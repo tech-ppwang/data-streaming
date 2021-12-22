@@ -248,7 +248,7 @@ public class ResultDataParse {
         return list;
     }
 
-    public static Map<String, SampleContext> initJMeterConsumer(String reportId, List<AbstractSampleConsumer> consumerList) {
+    public static Map<String, SampleContext> computeReport(String reportId, List<AbstractSampleConsumer> consumerList) {
         int row = 0;
         // 使用反射获取properties
         MsJMeterUtils.loadJMeterProperties("jmeter.properties");

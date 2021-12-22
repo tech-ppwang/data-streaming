@@ -56,6 +56,7 @@ public class TestResultSaveService {
     public void saveResult(LoadTestReportResult record) {
         int i = extLoadTestReportResultMapper.updateReportValue(record);
         if (i == 0) {
+            record.setId(UUID.randomUUID().toString());
             loadTestReportResultMapper.insertSelective(record);
         }
     }
@@ -94,7 +95,6 @@ public class TestResultSaveService {
         try {
             Object summary = SummaryFactory.getSummaryExecutor(reportKey).execute(reportId);
             LoadTestReportResult record = new LoadTestReportResult();
-            record.setId(UUID.randomUUID().toString());
             record.setReportId(reportId);
             record.setReportKey(reportKey);
             record.setReportValue(objectMapper.writeValueAsString(summary));

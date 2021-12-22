@@ -32,7 +32,6 @@ public abstract class AbstractReport implements Report {
 
     public void saveResult(String reportId, Object content) {
         LoadTestReportResult record = new LoadTestReportResult();
-        record.setId(UUID.randomUUID().toString());
         record.setReportId(reportId);
         record.setReportKey(getReportKey());
         try {
@@ -41,6 +40,6 @@ public abstract class AbstractReport implements Report {
             LogUtil.error(e);
         }
         testResultSaveService.saveResult(record);
-        LogUtil.info("Report generate success: {}, reportId: {}", getReportKey(), reportId);
+        LogUtil.debug("Report generate success: {}, reportId: {}", getReportKey(), reportId);
     }
 }

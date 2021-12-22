@@ -122,7 +122,7 @@ public class LogConsumer {
 
 
     public synchronized void save() {
-        LogUtil.info("save logs size: " + logList.size());
+        LogUtil.debug("save logs size: " + logList.size());
         Map<String, List<Log>> reportLogs = logList.stream().collect(Collectors.groupingBy(this::fetchGroupKey));
         reportLogs.forEach((groupKey, logs) -> {
             String[] ids = StringUtils.split(groupKey, "|");
