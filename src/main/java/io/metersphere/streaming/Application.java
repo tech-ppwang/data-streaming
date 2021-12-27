@@ -12,7 +12,10 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableConfigurationProperties({
         JmeterReportProperties.class
 })
-@PropertySource(value = {"file:/opt/metersphere/conf/metersphere.properties"}, encoding = "UTF-8", ignoreResourceNotFound = true)
+@PropertySource(value = {
+        "classpath:/base.properties",
+        "file:/opt/metersphere/conf/metersphere.properties",
+}, encoding = "UTF-8", ignoreResourceNotFound = true)
 @EnableScheduling
 public class Application {
 
